@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -83,23 +83,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: { message: 'Supabase is not configured. Please set up your .env file.' } as AuthError };
     }
-    
-    const { data, error } = await supabase.auth.updateUser({
-      data: updates,
-    });
-    
-    // Refresh user data after update
-    if (!error && data.user) {
-      setUser(data.user);
-      // Also refresh session to ensure all data is up to date
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-      }
+
+    if (!user) {
+      return { error: { message: 'User is not authenticated. Please sign in again.' } as AuthError };
     }
-    
-    return { error };
+
+    try {
+      const mergedMetadata = {
+        ...user.user_metadata,
+        ...updates,
+      };
+
+      const { data, error } = await supabase.auth.updateUser({
+        data: mergedMetadata,
+      });
+
+      if (error) {
+        console.error('Supabase updateUser error:', error);
+        return { error };
+      }
+
+      if (data.user) {
+        setUser(data.user);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+        }
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error('updateProfile exception:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
+      return { error: { message: errorMessage } as AuthError };
+    }
   };
 
   const updateAddress = async (address: { address_line1: string; address_line2?: string; postcode: string; city: string; state: string }) => {
@@ -112,9 +130,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     try {
+      const { data: latestUserData } = await supabase.auth.getUser();
+      const metadataSource = latestUserData.user?.user_metadata || user.user_metadata || {};
+      
       const { data, error } = await supabase.auth.updateUser({
         data: {
-          ...user.user_metadata,
+          ...metadataSource,
           address_line1: address.address_line1,
           address_line2: address.address_line2,
           postcode: address.postcode,
@@ -199,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // After verification, restore ALL user metadata and add phone_verified
     // This ensures full_name, email, address, and all other details are preserved
     // Note: email is stored in user.email (not user_metadata), so it's automatically preserved
-    const updatedMetadata = {
+    const updatedMetadata: Record<string, any> = {
       ...existingMetadata,
       phone_number: phoneNumber,
       phone_verified: true,

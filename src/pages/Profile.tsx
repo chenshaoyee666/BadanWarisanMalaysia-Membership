@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import PhoneVerification from '../components/PhoneVerification'
 
 export default function Profile() {
   const [verificationCode, setVerificationCode] = useState('')
@@ -73,18 +72,6 @@ export default function Profile() {
   return (
     <div>
       {/* ...existing profile fields... */}
-      
-      <div className="mt-6 border-t pt-6">
-        <h3 className="text-lg font-medium mb-4">Phone Verification</h3>
-        {phone ? (
-          <PhoneVerification 
-            phoneNumber={phone}
-            onVerificationSuccess={handleVerificationSuccess}
-          />
-        ) : (
-          <p className="text-yellow-600">Please add a phone number first</p>
-        )}
-      </div>
 
       {/* ...existing code... */}
     </div>

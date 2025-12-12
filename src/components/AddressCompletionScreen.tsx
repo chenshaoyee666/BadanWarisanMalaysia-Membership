@@ -100,26 +100,10 @@ export function AddressCompletionScreen({ onNavigate, onComplete, isNewUser = fa
         setSuccess(true);
         setIsLoading(false);
         
-        // If new user, navigate to phone verification initial screen after address completion
-        if (isNewUser) {
-          const phoneNumber = user?.user_metadata?.phone_number;
-          if (phoneNumber) {
-            setTimeout(() => {
-              onNavigate('phone-verification-initial', phoneNumber, true);
-            }, 1000);
-          } else {
-            // Phone number not found, go to home
-            console.warn('Phone number not found for new user');
-            setTimeout(() => {
-              onComplete();
-            }, 1000);
-          }
-        } else {
-          // Existing user, go to home
-          setTimeout(() => {
-            onComplete();
-          }, 1000);
-        }
+        // After address completion, go to home
+        setTimeout(() => {
+          onComplete();
+        }, 1000);
       }
     } catch (err) {
       console.error('Address update error:', err);
