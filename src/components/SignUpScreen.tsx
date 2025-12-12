@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, Phone } from 'lucide-react';
-import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
+import bwmLogo from '../assets/BWM logo.png';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SignUpScreenProps {

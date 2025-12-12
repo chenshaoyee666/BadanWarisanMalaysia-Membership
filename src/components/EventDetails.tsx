@@ -1,85 +1,158 @@
-import { ArrowLeft, Calendar, MapPin, Home, DollarSign, User } from 'lucide-react';
-import { Button } from './ui/button';
+import React, { useEffect, useRef } from 'react';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  MapPin,
+  Home,
+  DollarSign,
+  User
+} from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Event } from '../types/event';
+import { useAuth } from '../contexts/AuthContext';
+import bwmLogo from '../assets/BWM logo.png';
 
 interface EventDetailsProps {
   onNavigate: (screen: string) => void;
+  event: Event;
 }
 
-export function EventDetails({ onNavigate }: EventDetailsProps) {
+export function EventDetails({ onNavigate, event }: EventDetailsProps) {
+  const { user } = useAuth();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to top when component mounts
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [event.id]);
+
+  // Format description with proper paragraphs
+  const descriptionParagraphs = event.description.split('\n').filter(p => p.trim());
+
+  // Calculate if event is free for this user
+  const isFreeForUser = event.fee === 'Free' || (event.member_free && user);
+  const displayPrice = isFreeForUser ? 'Free' : event.fee;
+
+  // Generate Google Maps embed URL
+  const getMapEmbedUrl = () => {
+    if (event.lat && event.lng) {
+      return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${event.lat},${event.lng}&zoom=15`;
+    }
+    return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(event.location)}`;
+  };
+
   return (
-    <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
-      {/* SUB-PAGE: Simple Header with Back Button and Title */}
+    <div ref={scrollRef} className="min-h-screen bg-[#FFFBEA] flex flex-col">
+      {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center gap-4">
-        <button onClick={() => onNavigate('events')} className="text-[#FFFBEA]">
+        <button 
+          onClick={() => onNavigate('events')} 
+          className="text-white"
+        >
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-[#FFFBEA] font-['Lora'] flex-1 text-center mr-6">Event Details</h2>
+        <h2 className="text-white font-['Lora'] text-2xl flex-1 text-center mr-6" style={{ fontWeight: 700 }}>Event Details</h2>
       </header>
 
       {/* Hero Image */}
       <div className="relative">
         <ImageWithFallback 
-          src="https://images.unsplash.com/photo-1759850344068-717929375834?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxLdWFsYSUyMEx1bXB1ciUyMGhlcml0YWdlJTIwYnVpbGRpbmd8ZW58MXx8fHwxNzYyNDE0NjIxfDA&ixlib=rb-4.1.0&q=80&w=1080"
-          alt="Heritage Walk: KL"
+          src={event.poster_url}
+          alt={event.title}
           className="w-full h-64 object-cover"
         />
       </div>
 
       {/* Content */}
-      <main className="flex-1 px-4 py-6 overflow-y-auto pb-32">
+      <main className="flex-1 px-4 py-6 overflow-y-auto pb-24">
         {/* Event Title */}
-        <h2 className="text-[#333333] font-['Lora'] mb-4">Heritage Walk: Kuala Lumpur</h2>
+        <h1 className="text-[#333333] font-['Lora'] text-xl mb-4">{event.title}</h1>
         
         {/* Date and Time */}
         <div className="flex items-center gap-2 mb-3">
           <Calendar size={20} className="text-[#B48F5E]" />
-          <span className="text-[#333333]">Sat, 20 Dec 2025 @ 9:00 AM</span>
+          <span className="text-[#333333] font-['Inter']">
+            {event.date}{event.time && ` @ ${event.time}`}
+          </span>
         </div>
 
         {/* Location */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-3">
           <MapPin size={20} className="text-[#B48F5E]" />
-          <span className="text-[#333333]">Starts at Badan Warisan Malaysia</span>
+          <span className="text-[#333333] font-['Inter']">{event.location}</span>
         </div>
 
-        {/* Organizer Section */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-          <p className="text-[#333333] opacity-70 mb-3">Organized by</p>
+        {/* Price */}
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-[#0A402F] font-semibold font-['Inter']">{displayPrice}</span>
+          {event.member_free && event.fee !== 'Free' && (
+            <span className="text-[#B48F5E] text-sm font-['Inter']">• Free for members</span>
+          )}
+        </div>
+
+        {/* Organizer */}
+        <div className="border-t border-b border-gray-200 py-4 mb-6">
+          <p className="text-[#333333] opacity-50 text-sm mb-2 font-['Inter']">Organized by</p>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#0A402F] rounded-xl flex items-center justify-center">
-              <span className="text-[#FFFBEA] font-['Lora']">BWM</span>
-            </div>
-            <span className="text-[#333333]">Badan Warisan Malaysia</span>
+            <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-lg object-cover" />
+            <span className="text-[#333333] font-['Inter']">Badan Warisan Malaysia</span>
           </div>
         </div>
 
         {/* About This Event */}
         <div className="mb-6">
-          <h3 className="text-[#333333] font-['Lora'] mb-3">About this event</h3>
-          <p className="text-[#333333] opacity-70 leading-relaxed mb-3">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
-          <p className="text-[#333333] opacity-70 leading-relaxed mb-3">
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
-          </p>
-          <p className="text-[#333333] opacity-70 leading-relaxed">
-            Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
-          </p>
+          <h3 className="text-[#333333] font-['Lora'] text-lg mb-3">About this event</h3>
+          {descriptionParagraphs.map((paragraph, index) => (
+            <p 
+              key={index} 
+              className="text-[#333333] opacity-70 leading-relaxed mb-3 last:mb-0 font-['Inter']"
+            >
+              {paragraph}
+            </p>
+          ))}
         </div>
 
-        {/* Map Placeholder */}
-        <div className="mb-6">
-          <h3 className="text-[#333333] font-['Lora'] mb-3">Location</h3>
-          <div className="bg-gray-200 rounded-xl h-48 flex items-center justify-center">
-            <span className="text-gray-500">Map</span>
+        {/* Map Section */}
+        {(event.lat && event.lng) && (
+          <div className="mb-6">
+            <h3 className="text-[#333333] font-['Lora'] text-lg mb-3">Location</h3>
+            <div className="rounded-xl overflow-hidden h-48">
+              <iframe
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={getMapEmbedUrl()}
+              />
+            </div>
+            <a 
+              href={`https://maps.google.com/?q=${event.lat},${event.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#B48F5E] text-sm font-['Inter'] hover:underline mt-2 inline-block"
+            >
+              Open in Google Maps →
+            </a>
           </div>
-        </div>
+        )}
+
+        {/* Register Button */}
+        <button 
+          onClick={() => onNavigate('event-registration')}
+          className="w-full bg-[#0A402F] hover:bg-[#083525] text-white h-12 rounded-xl font-['Inter'] font-medium text-base"
+        >
+          Register Now {displayPrice !== 'Free' && `- ${displayPrice}`}
+        </button>
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
+        <div className="flex justify-between items-center">
           <button 
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
@@ -113,15 +186,6 @@ export function EventDetails({ onNavigate }: EventDetailsProps) {
           </button>
         </div>
       </nav>
-
-      {/* Sticky Bottom Button (above nav) */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <Button className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FFFBEA] h-12 rounded-xl font-['Inter']">
-            Book Now - RM20
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

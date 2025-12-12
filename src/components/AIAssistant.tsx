@@ -2,7 +2,7 @@ import { Send, Bell, Home, DollarSign, Calendar, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useState } from 'react';
-import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
+import bwmLogo from '../assets/BWM logo.png';
 
 interface AIAssistantProps {
   onNavigate: (screen: string) => void;
@@ -160,7 +160,7 @@ export function AIAssistant({ onNavigate }: AIAssistantProps) {
       </div>
 
       {/* TOP-LEVEL: Bottom Navigation Bar (at very bottom) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 z-10">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3 z-10">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <button 
             onClick={() => onNavigate('home')}
