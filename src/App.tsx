@@ -4,6 +4,7 @@ import { MembershipViewCard } from './components/MembershipViewCard';
 import { MembershipRegistration } from './components/MembershipRegistration';
 import { EventsList } from './components/EventsList';
 import { EventDetails } from './components/EventDetails';
+import { EventRegistration } from './components/EventRegistration';
 import { DonateScreen } from './components/DonateScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { ProfileScreen } from './components/ProfileScreen';
@@ -20,6 +21,7 @@ import { PhoneVerificationScreen } from './components/PhoneVerificationScreen';
 import { PhoneVerificationInitialScreen } from './components/PhoneVerificationInitialScreen';
 import { AddressCompletionScreen } from './components/AddressCompletionScreen';
 import { useAuth } from './contexts/AuthContext';
+import { Event } from './types/event';
 
 type Screen = 
   | 'login'
@@ -31,7 +33,8 @@ type Screen =
   | 'membership' 
   | 'membership-register' 
   | 'events' 
-  | 'event-details' 
+  | 'event-details'
+  | 'event-registration'
   | 'donate' 
   | 'profile'
   | 'leaderboard'
@@ -50,6 +53,7 @@ export default function App() {
   const [verificationPhone, setVerificationPhone] = useState<string>('');
   const [isSignUpVerification, setIsSignUpVerification] = useState(false);
   const [justLoggedIn, setJustLoggedIn] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     // Redirect based on authentication state (only if Supabase is configured)
@@ -103,7 +107,16 @@ export default function App() {
 
   // Wrapper for components that use the simple signature
   const handleNavigateSimple = (screen: string) => {
+    // Clear selected event when navigating away from event screens
+    if (screen !== 'event-details' && screen !== 'event-registration') {
+      setSelectedEvent(null);
+    }
     handleNavigate(screen);
+  };
+
+  // Handler for selecting an event
+  const handleSelectEvent = (event: Event) => {
+    setSelectedEvent(event);
   };
 
   // Show loading state while checking auth
@@ -174,11 +187,24 @@ export default function App() {
       )}
       
       {currentScreen === 'events' && (
-        <EventsList onNavigate={handleNavigateSimple} />
+        <EventsList 
+          onNavigate={handleNavigateSimple} 
+          onSelectEvent={handleSelectEvent}
+        />
       )}
       
-      {currentScreen === 'event-details' && (
-        <EventDetails onNavigate={handleNavigateSimple} />
+      {currentScreen === 'event-details' && selectedEvent && (
+        <EventDetails 
+          onNavigate={handleNavigateSimple} 
+          event={selectedEvent}
+        />
+      )}
+
+      {currentScreen === 'event-registration' && selectedEvent && (
+        <EventRegistration 
+          onNavigate={handleNavigateSimple} 
+          event={selectedEvent}
+        />
       )}
 
       {currentScreen === 'leaderboard' && (
@@ -186,7 +212,7 @@ export default function App() {
       )}
 
       {currentScreen === 'profile' && (
-        <ProfileScreen onNavigate={handleNavigateSimple} />
+        <ProfileScreen onNavigate={handleNavigateSimple} onSelectEvent={handleSelectEvent} />
       )}
 
       {currentScreen === 'donation-history' && (
