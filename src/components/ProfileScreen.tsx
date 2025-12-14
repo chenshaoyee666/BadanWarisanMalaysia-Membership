@@ -1,11 +1,16 @@
 import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User, Ticket } from 'lucide-react';
 import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
+import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User, MapPin } from 'lucide-react';
+import bwmLogo from '../assets/BWM logo.png';
 import { useAuth } from '../contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { fetchUserRegisteredEvents } from '../services/eventService';
+import { Event } from '../types/event';
 
 interface ProfileScreenProps {
   onNavigate: (screen: string) => void;
+  onSelectEvent?: (event: Event) => void;
 }
 
 const menuItems = [
@@ -16,8 +21,10 @@ const menuItems = [
   { id: 'settings', icon: Settings, label: 'Settings', screen: 'settings' },
 ];
 
-export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps) {
   const { user, signOut } = useAuth();
+  const [registeredEvents, setRegisteredEvents] = useState<Event[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
   // Refresh user data when component mounts or when navigating back
   useEffect(() => {
@@ -34,6 +41,17 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       }
     };
     refreshUser();
+  }, [user]);
+
+  // Fetch user's registered events
+  useEffect(() => {
+    const loadRegisteredEvents = async () => {
+      setLoadingEvents(true);
+      const { data } = await fetchUserRegisteredEvents(user?.id, user?.email || undefined);
+      setRegisteredEvents(data || []);
+      setLoadingEvents(false);
+    };
+    loadRegisteredEvents();
   }, [user]);
 
   const handleLogout = async () => {
@@ -113,6 +131,64 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           </div>
         </div>
 
+        {/* My Registered Events */}
+        <div className="bg-white rounded-2xl shadow-sm mb-6 overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="text-[#333333] font-['Lora'] text-lg" style={{ fontWeight: 600 }}>My Registered Events</h3>
+          </div>
+          
+          {loadingEvents ? (
+            <div className="p-6 text-center">
+              <div className="w-6 h-6 border-2 border-[#0A402F] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <p className="text-gray-400 text-sm font-['Inter']">Loading events...</p>
+            </div>
+          ) : registeredEvents.length === 0 ? (
+            <div className="p-6 text-center">
+              <Calendar size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm font-['Inter']">No registered events yet</p>
+              <button
+                onClick={() => onNavigate('events')}
+                className="mt-3 text-[#0A402F] text-sm font-['Inter']" style={{ fontWeight: 600 }}
+              >
+                Browse Events →
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {registeredEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="p-4 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    onSelectEvent?.(event);
+                    onNavigate('event-details');
+                  }}
+                >
+                  <img
+                    src={event.poster_url}
+                    alt={event.title}
+                    className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[#333333] font-['Inter'] text-sm font-medium truncate">{event.title}</h4>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Calendar size={12} className="text-[#0A402F]" />
+                      <span className="text-gray-500 text-xs font-['Inter']">{event.date}</span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <MapPin size={12} className="text-[#0A402F]" />
+                      <span className="text-gray-500 text-xs font-['Inter'] truncate">{event.location}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-xs text-white bg-[#0A402F] px-2 py-1 rounded-lg font-['Inter']">Registered</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Menu List */}
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6">
           {menuItems.map((item, index) => (
@@ -146,7 +222,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       </main>
 
       {/* TOP-LEVEL: Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <button
             onClick={() => onNavigate('home')}

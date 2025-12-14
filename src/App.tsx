@@ -6,6 +6,7 @@ import { MembershipSuccess } from './components/MembershipSuccess';
 import { MembershipRenewalPayment } from './components/MembershipRenewalPayment';
 import { EventsList } from './components/EventsList';
 import { EventDetails } from './components/EventDetails';
+import { EventRegistration } from './components/EventRegistration';
 import { DonateScreen } from './components/DonateScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { ProfileScreen } from './components/ProfileScreen';
@@ -18,18 +19,15 @@ import { HeritageJournal } from './components/HeritageJournal';
 import { CommunityWall } from './components/CommunityWall';
 import { LoginScreen } from './components/LoginScreen';
 import { SignUpScreen } from './components/SignUpScreen';
-import { PhoneVerificationScreen } from './components/PhoneVerificationScreen';
-import { PhoneVerificationInitialScreen } from './components/PhoneVerificationInitialScreen';
 import { AddressCompletionScreen } from './components/AddressCompletionScreen';
 import { MyTicketsScreen } from './components/MyTicketsScreen';
 import { AdminScannerScreen } from './components/AdminScannerScreen';
 import { useAuth } from './contexts/AuthContext';
+import { Event } from './types/event';
 
 type Screen =
   | 'login'
   | 'signup'
-  | 'phone-verification-initial'
-  | 'phone-verification'
   | 'address-completion'
   | 'home'
   | 'membership'
@@ -38,6 +36,13 @@ type Screen =
   | 'events'
   | 'event-details'
   | 'donate'
+  | 'home' 
+  | 'membership' 
+  | 'membership-register' 
+  | 'events' 
+  | 'event-details'
+  | 'event-registration'
+  | 'donate' 
   | 'profile'
   | 'leaderboard'
   | 'donation-history'
@@ -55,9 +60,8 @@ export default function App() {
   const { user, loading, isConfigured, isAddressComplete } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen>('login');
   const [activeTab, setActiveTab] = useState<string>('home');
-  const [verificationPhone, setVerificationPhone] = useState<string>('');
-  const [isSignUpVerification, setIsSignUpVerification] = useState(false);
   const [justLoggedIn, setJustLoggedIn] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     // Redirect based on authentication state (only if Supabase is configured)
@@ -97,10 +101,6 @@ export default function App() {
   }, [user, loading, isConfigured, currentScreen, justLoggedIn, isAddressComplete]);
 
   const handleNavigate = (screen: string, phone?: string, isSignUp?: boolean) => {
-    if ((screen === 'phone-verification' || screen === 'phone-verification-initial') && phone) {
-      setVerificationPhone(phone);
-      setIsSignUpVerification(isSignUp || false);
-    }
     setCurrentScreen(screen as Screen);
 
     // Update active tab for bottom navigation
@@ -111,7 +111,16 @@ export default function App() {
 
   // Wrapper for components that use the simple signature
   const handleNavigateSimple = (screen: string) => {
+    // Clear selected event when navigating away from event screens
+    if (screen !== 'event-details' && screen !== 'event-registration') {
+      setSelectedEvent(null);
+    }
     handleNavigate(screen);
+  };
+
+  // Handler for selecting an event
+  const handleSelectEvent = (event: Event) => {
+    setSelectedEvent(event);
   };
 
   // Show loading state while checking auth
@@ -137,26 +146,6 @@ export default function App() {
 
       {currentScreen === 'signup' && (
         <SignUpScreen onNavigate={handleNavigate} />
-      )}
-
-      {currentScreen === 'phone-verification-initial' && verificationPhone && (
-        <PhoneVerificationInitialScreen
-          onNavigate={handleNavigate}
-          phoneNumber={verificationPhone}
-          isSignUp={isSignUpVerification}
-        />
-      )}
-
-      {currentScreen === 'phone-verification' && verificationPhone && (
-        <PhoneVerificationScreen
-          onNavigate={handleNavigate}
-          phoneNumber={verificationPhone}
-          onVerificationComplete={() => {
-            // After phone verification, always go to profile to show all user details
-            handleNavigate('profile');
-          }}
-          isSignUp={isSignUpVerification}
-        />
       )}
 
       {currentScreen === 'address-completion' && (
@@ -186,11 +175,27 @@ export default function App() {
       )}
 
       {currentScreen === 'events' && (
-        <EventsList onNavigate={handleNavigateSimple} />
+        <EventsList 
+          onNavigate={handleNavigateSimple} 
+          onSelectEvent={handleSelectEvent}
+        />
       )}
 
       {currentScreen === 'event-details' && (
         <EventDetails onNavigate={handleNavigateSimple} />
+      
+      {currentScreen === 'event-details' && selectedEvent && (
+        <EventDetails 
+          onNavigate={handleNavigateSimple} 
+          event={selectedEvent}
+        />
+      )}
+
+      {currentScreen === 'event-registration' && selectedEvent && (
+        <EventRegistration 
+          onNavigate={handleNavigateSimple} 
+          event={selectedEvent}
+        />
       )}
 
       {currentScreen === 'leaderboard' && (
@@ -198,7 +203,7 @@ export default function App() {
       )}
 
       {currentScreen === 'profile' && (
-        <ProfileScreen onNavigate={handleNavigateSimple} />
+        <ProfileScreen onNavigate={handleNavigateSimple} onSelectEvent={handleSelectEvent} />
       )}
 
       {currentScreen === 'donation-history' && (

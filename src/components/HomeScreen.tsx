@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState } from 'react';
-import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
+import bwmLogo from '../assets/BWM logo.png';
 import { useAuth } from '../contexts/AuthContext';
 
 interface HomeScreenProps {
@@ -200,7 +200,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <button
             onClick={() => onNavigate('home')}

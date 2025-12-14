@@ -1,7 +1,7 @@
 import { Trophy, Medal, Award, Bell, Home, DollarSign, Calendar, User } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useState } from 'react';
-import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
+import bwmLogo from '../assets/BWM logo.png';
 
 interface LeaderboardScreenProps {
   onNavigate: (screen: string) => void;
@@ -151,7 +151,7 @@ export function LeaderboardScreen({ onNavigate }: LeaderboardScreenProps) {
       </main>
 
       {/* TOP-LEVEL: Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <button 
             onClick={() => onNavigate('home')}
