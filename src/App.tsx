@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { HomeScreen } from './components/HomeScreen';
 import { MembershipViewCard } from './components/MembershipViewCard';
 import { MembershipRegistration } from './components/MembershipRegistration';
+import { MembershipSuccess } from './components/MembershipSuccess';
+import { MembershipRenewalPayment } from './components/MembershipRenewalPayment';
 import { EventsList } from './components/EventsList';
 import { EventDetails } from './components/EventDetails';
 import { DonateScreen } from './components/DonateScreen';
@@ -19,20 +21,23 @@ import { SignUpScreen } from './components/SignUpScreen';
 import { PhoneVerificationScreen } from './components/PhoneVerificationScreen';
 import { PhoneVerificationInitialScreen } from './components/PhoneVerificationInitialScreen';
 import { AddressCompletionScreen } from './components/AddressCompletionScreen';
+import { MyTicketsScreen } from './components/MyTicketsScreen';
+import { AdminScannerScreen } from './components/AdminScannerScreen';
 import { useAuth } from './contexts/AuthContext';
 
-type Screen = 
+type Screen =
   | 'login'
   | 'signup'
   | 'phone-verification-initial'
   | 'phone-verification'
   | 'address-completion'
-  | 'home' 
-  | 'membership' 
-  | 'membership-register' 
-  | 'events' 
-  | 'event-details' 
-  | 'donate' 
+  | 'home'
+  | 'membership'
+  | 'membership-register'
+  | 'membership-success'
+  | 'events'
+  | 'event-details'
+  | 'donate'
   | 'profile'
   | 'leaderboard'
   | 'donation-history'
@@ -40,8 +45,11 @@ type Screen =
   | 'ai-assistant'
   | 'heritage-passport'
   | 'my-events'
+  | 'my-tickets'
   | 'settings'
-  | 'community-wall';
+  | 'community-wall'
+  | 'admin-scanner'
+  | 'membership-renewal-payment';
 
 export default function App() {
   const { user, loading, isConfigured, isAddressComplete } = useAuth();
@@ -62,7 +70,7 @@ export default function App() {
         // If user just logged in, check address completion
         else if (justLoggedIn && currentScreen === 'login') {
           const addressComplete = isAddressComplete();
-          
+
           // If address is not complete after login, redirect to address completion
           if (!addressComplete) {
             setCurrentScreen('address-completion');
@@ -94,7 +102,7 @@ export default function App() {
       setIsSignUpVerification(isSignUp || false);
     }
     setCurrentScreen(screen as Screen);
-    
+
     // Update active tab for bottom navigation
     if (['home', 'donate', 'events', 'profile'].includes(screen)) {
       setActiveTab(screen);
@@ -121,8 +129,8 @@ export default function App() {
   return (
     <div className="max-w-md mx-auto bg-[#FFFBEA] min-h-screen">
       {currentScreen === 'login' && (
-        <LoginScreen 
-          onNavigate={handleNavigateSimple} 
+        <LoginScreen
+          onNavigate={handleNavigateSimple}
           onLoginSuccess={() => setJustLoggedIn(true)}
         />
       )}
@@ -164,19 +172,23 @@ export default function App() {
       {currentScreen === 'home' && (
         <HomeScreen onNavigate={handleNavigateSimple} activeTab={activeTab} />
       )}
-      
+
       {currentScreen === 'membership' && (
         <MembershipViewCard onNavigate={handleNavigateSimple} />
       )}
-      
+
       {currentScreen === 'membership-register' && (
         <MembershipRegistration onNavigate={handleNavigateSimple} />
       )}
-      
+
+      {currentScreen === 'membership-success' && (
+        <MembershipSuccess onNavigate={handleNavigateSimple} />
+      )}
+
       {currentScreen === 'events' && (
         <EventsList onNavigate={handleNavigateSimple} />
       )}
-      
+
       {currentScreen === 'event-details' && (
         <EventDetails onNavigate={handleNavigateSimple} />
       )}
@@ -218,8 +230,20 @@ export default function App() {
         <EditProfileScreen onNavigate={handleNavigate} />
       )}
 
+      {currentScreen === 'my-tickets' && (
+        <MyTicketsScreen onNavigate={handleNavigateSimple} />
+      )}
+
       {currentScreen === 'settings' && (
         <SettingsScreen onNavigate={handleNavigateSimple} />
+      )}
+
+      {currentScreen === 'admin-scanner' && (
+        <AdminScannerScreen onNavigate={handleNavigateSimple} />
+      )}
+
+      {currentScreen === 'membership-renewal-payment' && (
+        <MembershipRenewalPayment onNavigate={handleNavigateSimple} />
       )}
     </div>
   );

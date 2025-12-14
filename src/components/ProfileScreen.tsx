@@ -1,4 +1,4 @@
-import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User } from 'lucide-react';
+import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User, Ticket } from 'lucide-react';
 import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
@@ -9,6 +9,7 @@ interface ProfileScreenProps {
 }
 
 const menuItems = [
+  { id: 'tickets', icon: Ticket, label: 'My Tickets', screen: 'my-tickets' },
   { id: 'donations', icon: History, label: 'Donation History', screen: 'donation-history' },
   { id: 'membership', icon: CreditCard, label: 'My Membership Card', screen: 'membership' },
   { id: 'edit-profile', icon: UserIcon, label: 'Edit Profile', screen: 'edit-profile' },
@@ -49,7 +50,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const userCity = user?.user_metadata?.city || '';
   const userState = user?.user_metadata?.state || '';
   const userInitial = userName.charAt(0).toUpperCase();
-  
+
   // Format full address
   const formatAddress = () => {
     const parts = [];
@@ -66,7 +67,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     }
     return parts.length > 0 ? parts.join(', ') : 'Not provided';
   };
-  
+
   const fullAddress = formatAddress();
 
   return (
@@ -94,7 +95,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               <p className="text-[#333333] opacity-70 text-sm">{userEmail}</p>
             </div>
           </div>
-          
+
           {/* Contact Information */}
           <div className="border-t pt-4 mt-4 space-y-3">
             <div>
@@ -118,9 +119,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             <button
               key={item.id}
               onClick={() => onNavigate(item.screen)}
-              className={`w-full flex items-center justify-between p-4 hover:bg-[#0A402F]/5 transition-colors ${
-                index !== menuItems.length - 1 ? 'border-b border-gray-200' : ''
-              }`}
+              className={`w-full flex items-center justify-between p-4 hover:bg-[#0A402F]/5 transition-colors 
+                ${index !== menuItems.length - 1 ? 'border-b border-gray-200' : ''
+                }`}
             >
               <div className="flex items-center gap-3">
                 <item.icon className="text-[#0A402F]" size={20} />
@@ -132,7 +133,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         </div>
 
         {/* Log Out Button */}
-        <button 
+        <button
           onClick={handleLogout}
           className="w-full flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm hover:bg-[#d4183d]/5 transition-colors"
         >
@@ -147,31 +148,31 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       {/* TOP-LEVEL: Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
-          <button 
+          <button
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('donate')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('events')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('profile')}
             className="flex flex-col items-center gap-1 text-[#0A402F]"
           >
