@@ -41,10 +41,25 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
           </button>
 
           {/* Privacy Policy */}
-          <button className="w-full flex items-center justify-between p-4 hover:bg-[#0A402F]/5 transition-colors">
+          <button className="w-full flex items-center justify-between p-4 bg-white hover:bg-[#0A402F]/5 transition-colors border-b border-gray-200">
             <div className="flex items-center gap-3">
               <Shield className="text-[#0A402F]" size={20} />
               <span className="text-[#333333] font-['Inter']">Privacy Policy</span>
+            </div>
+            <ChevronRight className="text-[#333333] opacity-50" size={20} />
+          </button>
+
+          {/* Admin Tools (New) */}
+          <button
+            onClick={() => onNavigate('admin-scanner')}
+            className="w-full flex items-center justify-between p-4 bg-white hover:bg-[#0A402F]/5 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Shield className="text-[#B8860B]" size={20} />
+              <div className="text-left">
+                <span className="block text-[#333333] font-['Inter']">Admin Scanner</span>
+                <span className="block text-xs text-[#B8860B]">Staff Access Only</span>
+              </div>
             </div>
             <ChevronRight className="text-[#333333] opacity-50" size={20} />
           </button>
