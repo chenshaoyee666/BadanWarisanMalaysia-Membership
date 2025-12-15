@@ -1,9 +1,9 @@
-import { Bell, Heart, Calendar, Trophy, HelpCircle, Home, DollarSign, User, Menu, X, Award, MessageSquare, BookOpen, QrCode } from 'lucide-react';
+import { Bell, Heart, Calendar, Trophy, HelpCircle, Home, DollarSign, User, Menu, X, Award, MessageSquare, BookOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState } from 'react';
-import bwmLogo from 'figma:asset/0d1febf7746d940532ad6ebe58464b3c717cca4a.png';
+import bwmLogo from '../assets/BWM logo.png';
 import { useAuth } from '../contexts/AuthContext';
 
 interface HomeScreenProps {
@@ -14,7 +14,7 @@ interface HomeScreenProps {
 export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
   const { user } = useAuth();
   const [showQuickMenu, setShowQuickMenu] = useState(false);
-
+  
   // Get user's full name from metadata
   const userName = user?.user_metadata?.full_name || 'User';
 
@@ -30,7 +30,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
                 <X size={24} />
               </button>
             </div>
-
+            
             <div className="space-y-3">
               <button
                 onClick={() => {
@@ -73,21 +73,6 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
                   <p className="text-[#333333] opacity-70">Read supporter messages</p>
                 </div>
               </button>
-
-              {/* Admin Scanner */}
-              <button
-                onClick={() => {
-                  onNavigate('admin-scanner');
-                  setShowQuickMenu(false);
-                }}
-                className="w-full flex items-center gap-3 p-4 bg-[#FEFDF5] rounded-xl hover:bg-[#0A402F]/5 transition-colors border-t border-dashed border-[#B8860B]/30"
-              >
-                <QrCode className="text-[#B8860B]" size={24} />
-                <div className="text-left">
-                  <p className="text-[#333333]">Admin Scanner</p>
-                  <p className="text-[#B8860B] text-xs">Staff Access Only</p>
-                </div>
-              </button>
             </div>
           </div>
         </div>
@@ -113,17 +98,17 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <Button
+          <Button 
             className="bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FEFDF5] h-14 rounded-xl"
             onClick={() => onNavigate('donate')}
           >
             <Heart className="mr-2" size={20} />
             Donate Now
           </Button>
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             className="border-2 border-[#0A402F] text-[#0A402F] hover:bg-[#0A402F]/5 h-14 rounded-xl"
-            onClick={() => onNavigate('membership-register')}
+            onClick={() => onNavigate('membership')}
           >
             Membership
           </Button>
@@ -131,23 +116,23 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
 
         {/* Icon Menu */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <button
+          <button 
             onClick={() => onNavigate('events')}
             className="bg-white rounded-xl p-4 flex flex-col items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
           >
             <Calendar className="text-[#333333] mb-2" size={32} />
             <span className="text-[#333333]">Events</span>
           </button>
-
-          <button
+          
+          <button 
             onClick={() => onNavigate('leaderboard')}
             className="bg-white rounded-xl p-4 flex flex-col items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
           >
             <Trophy className="text-[#333333] mb-2" size={32} />
             <span className="text-[#333333]">Leaderboard</span>
           </button>
-
-          <button
+          
+          <button 
             onClick={() => onNavigate('ai-assistant')}
             className="bg-white rounded-xl p-4 flex flex-col items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
           >
@@ -158,7 +143,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
 
         {/* Campaign Card */}
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6">
-          <ImageWithFallback
+          <ImageWithFallback 
             src="https://images.unsplash.com/photo-1593857389276-7c794900c90f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxNYWxheXNpYW4lMjBoZXJpdGFnZSUyMHRyYWRpdGlvbmFsJTIwaG91c2V8ZW58MXx8fHwxNzYyNDE0NjIwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
             alt="Rumah Penghulu"
             className="w-full h-48 object-cover"
@@ -166,7 +151,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
           <div className="p-4">
             <h3 className="text-[#333333] font-['Lora'] mb-2">Rumah Penghulu Restoration</h3>
             <p className="text-[#333333] opacity-70 mb-4">Help us preserve this historic traditional Malay house for future generations</p>
-
+            
             <div className="mb-2">
               <div className="flex justify-between mb-2">
                 <span className="text-[#333333]">RM15,000</span>
@@ -174,7 +159,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
               </div>
               <Progress value={75} className="h-2 bg-[#FEFDF5]" indicatorClassName="bg-[#B8860B]" />
             </div>
-
+            
             <Button className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FEFDF5] mt-2 rounded-lg">
               Support Campaign
             </Button>
@@ -190,7 +175,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
             </p>
             <p className="text-[#333333] mt-2">- Ahmad I.</p>
           </div>
-          <button
+          <button 
             onClick={() => onNavigate('community-wall')}
             className="text-[#0A402F] hover:underline"
           >
@@ -200,33 +185,33 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
-          <button
+          <button 
             onClick={() => onNavigate('home')}
             className={`flex flex-col items-center gap-1 ${activeTab === 'home' ? 'text-[#0A402F]' : 'text-gray-400'}`}
           >
             <Home size={24} />
             <span className="text-xs">Home</span>
           </button>
-
-          <button
+          
+          <button 
             onClick={() => onNavigate('donate')}
             className={`flex flex-col items-center gap-1 ${activeTab === 'donate' ? 'text-[#0A402F]' : 'text-gray-400'}`}
           >
             <DollarSign size={24} />
             <span className="text-xs">Donate</span>
           </button>
-
-          <button
+          
+          <button 
             onClick={() => onNavigate('events')}
             className={`flex flex-col items-center gap-1 ${activeTab === 'events' ? 'text-[#0A402F]' : 'text-gray-400'}`}
           >
             <Calendar size={24} />
             <span className="text-xs">Events</span>
           </button>
-
-          <button
+          
+          <button 
             onClick={() => onNavigate('profile')}
             className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-[#0A402F]' : 'text-gray-400'}`}
           >
