@@ -72,9 +72,9 @@ export function LeaderboardScreen({ onNavigate }: LeaderboardScreenProps) {
       <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
-          <h2 className="text-[#FFFBEA] font-['Lora']">Community Champions</h2>
         </div>
-        <button className="text-[#FFFBEA]">
+        <h2 className="text-white font-['Lora'] flex-1 text-center">Community Champions</h2>
+        <button className="text-white">
           <Bell size={24} />
         </button>
       </header>

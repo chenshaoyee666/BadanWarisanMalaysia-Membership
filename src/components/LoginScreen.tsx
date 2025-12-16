@@ -81,12 +81,12 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
         <img 
           src={bwmLogo} 
           alt="Badan Warisan Malaysia Logo" 
-          className="w-20 h-20 rounded-2xl mb-4 bg-white p-2"
+          className="w-20 h-20 rounded-2xl mb-4"
         />
-        <h1 className="text-[#FFFBEA] font-['Lora'] text-2xl font-semibold text-center">
+        <h1 className="text-white font-['Lora'] text-2xl font-semibold text-center">
           Badan Warisan Malaysia
         </h1>
-        <p className="text-[#FFFBEA]/80 text-sm mt-2 text-center">
+        <p className="text-white text-sm mt-3 text-center">
           Preserving Malaysia's Heritage
         </p>
       </div>
@@ -113,7 +113,7 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
           )}
 
           {/* Welcome Section */}
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <h2 className="text-[#333333] font-['Lora'] text-3xl font-semibold mb-2">
               Welcome Back
             </h2>
@@ -123,16 +123,17 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-2">
             {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[#333333] font-medium">
                 Email Address
               </Label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <Mail 
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#0A402F] opacity-60" 
-                  size={20} 
+                  className="absolute top-1/2 transform -translate-y-1/2 text-[#0A402F]/50 pointer-events-none" 
+                  style={{ left: '14px' }}
+                  size={18} 
                 />
                 <Input
                   id="email"
@@ -142,7 +143,8 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
                   onChange={(e) => setEmail(e.target.value.trimStart())}
                   required
                   autoComplete="email"
-                  className="pl-10 h-12 rounded-xl bg-white border-[#0A402F]/20 text-[#333333] focus:border-[#0A402F] focus:ring-[#0A402F]/20"
+                  style={{ paddingLeft: '44px' }}
+                  className="h-12 rounded-xl bg-white border-[#0A402F]/20 text-[#333333] focus:border-[#0A402F] focus:ring-[#0A402F]/20"
                 />
               </div>
             </div>
@@ -152,10 +154,11 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
               <Label htmlFor="password" className="text-[#333333] font-medium">
                 Password
               </Label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <Lock 
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#0A402F] opacity-60" 
-                  size={20} 
+                  className="absolute top-1/2 transform -translate-y-1/2 text-[#0A402F]/50 pointer-events-none" 
+                  style={{ left: '14px' }}
+                  size={18} 
                 />
                 <Input
                   id="password"
@@ -164,14 +167,16 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pl-10 pr-10 h-12 rounded-xl bg-white border-[#0A402F]/20 text-[#333333] focus:border-[#0A402F] focus:ring-[#0A402F]/20"
+                  style={{ paddingLeft: '44px', paddingRight: '44px' }}
+                  className="h-12 rounded-xl bg-white border-[#0A402F]/20 text-[#333333] focus:border-[#0A402F] focus:ring-[#0A402F]/20"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0A402F] opacity-60 hover:opacity-100 transition-opacity"
+                  style={{ right: '14px' }}
+                  className="absolute top-1/2 transform -translate-y-1/2 text-[#0A402F]/50 hover:text-[#FFFFFF] transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>

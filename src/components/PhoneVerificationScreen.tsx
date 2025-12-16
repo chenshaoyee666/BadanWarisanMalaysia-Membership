@@ -94,10 +94,10 @@ export function PhoneVerificationScreen({
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center gap-4">
-        <button onClick={() => onNavigate(isSignUp ? 'signup' : 'edit-profile', undefined, false)} className="text-[#FFFBEA]">
+        <button onClick={() => onNavigate(isSignUp ? 'signup' : 'edit-profile', undefined, false)} className="text-white">
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-[#FFFBEA] font-['Lora'] flex-1 text-center mr-6">Verify Phone Number</h2>
+        <h2 className="text-white font-['Lora'] flex-1 text-center mr-6">Verify Phone Number</h2>
       </header>
 
       {/* Content */}

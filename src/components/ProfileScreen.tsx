@@ -92,7 +92,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
         <div className="flex items-center gap-3">
           <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
         </div>
-        <button className="text-[#FFFBEA]">
+        <button className="text-white">
           <Bell size={24} />
         </button>
       </header>

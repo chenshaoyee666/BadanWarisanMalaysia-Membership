@@ -81,15 +81,17 @@ export function AIAssistant({ onNavigate }: AIAssistantProps) {
       <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
-          <h2 className="text-[#FFFBEA] font-['Lora']">BWM Assistant</h2>
         </div>
-        <button className="text-[#FFFBEA]">
+        <h2 className="text-white font-['Lora'] flex-1 text-center">
+          BWM Assistant
+        </h2>
+        <button className="text-white">
           <Bell size={24} />
         </button>
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 px-4 py-6 overflow-y-auto pb-48">
+      <main className="flex-1 px-4 py-6 overflow-y-auto pb-36">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -136,9 +138,9 @@ export function AIAssistant({ onNavigate }: AIAssistantProps) {
         )}
       </main>
 
-      {/* Input Bar (above bottom nav) */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-20">
-        <div className="max-w-md mx-auto flex gap-2">
+      {/* Input Bar (above bottom nav) - not fixed, uses flex positioning */}
+      <div className="bg-[#FFFBEA] px-4 py-3 border-t border-gray-100">
+        <div className="flex gap-2">
           <Input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -148,20 +150,20 @@ export function AIAssistant({ onNavigate }: AIAssistantProps) {
               }
             }}
             placeholder="Ask me anything about heritage..."
-            className="flex-1 bg-[#FFFBEA] border-gray-300 rounded-full font-['Inter']"
+            className="flex-1 bg-white border-gray-300 rounded-full font-['Inter']"
           />
           <Button
             onClick={() => handleSend(inputText)}
-            className="bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FFFBEA] rounded-full w-12 h-12 p-0"
+            className="bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FFFBEA] rounded-full w-12 h-12 p-0 flex-shrink-0"
           >
             <Send size={20} />
           </Button>
         </div>
       </div>
 
-      {/* TOP-LEVEL: Bottom Navigation Bar (at very bottom) */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3 z-10">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      {/* TOP-LEVEL: Bottom Navigation Bar */}
+      <nav className="bg-white border-t border-gray-200 px-6 py-3">
+        <div className="flex justify-between items-center">
           <button 
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
