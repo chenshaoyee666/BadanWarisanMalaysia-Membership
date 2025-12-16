@@ -1,6 +1,10 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Ticket, RefreshCw, Edit } from 'lucide-react';
 import { Button } from './ui/button';
+import { MembershipCard } from './MembershipCard';
+import { TicketCard } from './TicketCard';
 import { useAuth } from '../contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface MembershipViewCardProps {
   onNavigate: (screen: string) => void;
@@ -8,11 +12,85 @@ interface MembershipViewCardProps {
 
 export function MembershipViewCard({ onNavigate }: MembershipViewCardProps) {
   const { user } = useAuth();
-  
-  // Get user's full name from metadata
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [membershipData, setMembershipData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get user's full name from metadata as fallback
   const userName = user?.user_metadata?.full_name || 'User';
-  // Get membership ID from metadata (using member_id from raw_user_meta_data)
-  const membershipId = user?.user_metadata?.member_id || 'BWM-12345';
+
+  useEffect(() => {
+    if (user) {
+      fetchTickets();
+      fetchMembership();
+    }
+  }, [user]);
+
+  const fetchMembership = async () => {
+    setIsLoading(true);
+    try {
+      // First, try to get ANY membership for this user (for debugging)
+      const { data, error } = await supabase
+        .from('memberships')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      console.log('Membership fetch result:', { data, error }); // DEBUG
+
+      if (!error && data) {
+        setMembershipData(data);
+      } else {
+        console.warn('No membership found or error:', error);
+      }
+    } catch (err) {
+      console.error("Error fetching membership:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select(`
+          *,
+          events (
+            title,
+            date,
+            location
+          )
+        `)
+        .eq('user_id', user?.id)
+        .eq('status', 'valid')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTickets(data || []);
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+    }
+  };
+
+  // State for renewal confirmation modal
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
+
+  // Get tier pricing
+  const getTierPrice = (tier: string) => {
+    const prices: Record<string, number> = {
+      'Ordinary Member': 90,
+      'Student Member': 20,
+      'Corporate Member': 2500,
+    };
+    return prices[tier] || 90;
+  };
+
+  const newExpiryDate = new Date();
+  newExpiryDate.setFullYear(newExpiryDate.getFullYear() + 1);
+
   return (
     <div className="min-h-screen bg-[#FEFDF5] flex flex-col">
       {/* Header */}
@@ -26,60 +104,110 @@ export function MembershipViewCard({ onNavigate }: MembershipViewCardProps) {
       {/* Content */}
       <main className="flex-1 px-4 py-6">
         {/* Digital Membership Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-          {/* Card Header with Logo */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="w-12 h-12 bg-[#0A402F] rounded-lg flex items-center justify-center">
-              <span className="text-[#FEFDF5] font-['Lora']">BWM</span>
-            </div>
-            <span className="text-[#B8860B]">MEMBER</span>
+        {isLoading ? (
+          <div className="bg-white rounded-2xl p-6 shadow-lg text-center text-gray-500 mb-6 animate-pulse">
+            Loading membership...
           </div>
+        ) : (
+          <MembershipCard
+            user={{
+              fullName: membershipData?.full_name || userName,
+              companyName: membershipData?.company_name,
+              membershipId: membershipData?.membership_number || membershipData?.id || 'NOT REGISTERED',
+              id: user?.id,
+              tier: membershipData?.tier || 'Member'
+            }}
+            className="mb-6"
+          />
+        )}
 
-          {/* Member Info */}
+        {/* Active Tickets Section */}
+        {tickets.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-[#333333] font-['Lora'] mb-1">{userName}</h3>
-            <p className="text-[#333333] opacity-70">Membership ID: {membershipId}</p>
-            <p className="text-[#333333] opacity-70 mt-1">Valid until: Dec 31, 2025</p>
-          </div>
-
-          {/* QR Code */}
-          <div className="bg-[#FEFDF5] rounded-xl p-6 flex items-center justify-center mb-4">
-            <div className="w-40 h-40 bg-white border-2 border-[#333333] rounded-lg flex items-center justify-center">
-              <svg viewBox="0 0 100 100" className="w-full h-full p-2">
-                <rect x="0" y="0" width="20" height="20" fill="#333333"/>
-                <rect x="25" y="0" width="20" height="20" fill="#333333"/>
-                <rect x="55" y="0" width="20" height="20" fill="#333333"/>
-                <rect x="80" y="0" width="20" height="20" fill="#333333"/>
-                <rect x="0" y="25" width="20" height="20" fill="#333333"/>
-                <rect x="80" y="25" width="20" height="20" fill="#333333"/>
-                <rect x="0" y="55" width="20" height="20" fill="#333333"/>
-                <rect x="30" y="55" width="20" height="20" fill="#333333"/>
-                <rect x="55" y="55" width="20" height="20" fill="#333333"/>
-                <rect x="80" y="55" width="20" height="20" fill="#333333"/>
-                <rect x="0" y="80" width="20" height="20" fill="#333333"/>
-                <rect x="25" y="80" width="20" height="20" fill="#333333"/>
-                <rect x="55" y="80" width="20" height="20" fill="#333333"/>
-                <rect x="80" y="80" width="20" height="20" fill="#333333"/>
-              </svg>
+            <h3 className="text-[#333333] font-['Lora'] mb-4 flex items-center gap-2">
+              <Ticket size={20} className="text-[#B8860B]" />
+              Your Active Tickets
+            </h3>
+            <div className="space-y-4">
+              {tickets.map((ticket) => (
+                <TicketCard key={ticket.id} ticket={ticket} />
+              ))}
             </div>
           </div>
-
-          <p className="text-center text-[#333333] opacity-70">Show this QR code at events for free entry</p>
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <Button className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FEFDF5] h-12 rounded-lg">
+          <Button
+            onClick={() => setShowRenewalModal(true)}
+            disabled={!membershipData}
+            className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FEFDF5] h-12 rounded-lg"
+          >
+            <RefreshCw size={18} className="mr-2" />
             Renew Membership
           </Button>
-          
-          <Button 
-            variant="outline" 
+
+          <Button
+            onClick={() => {
+              // Set flag in localStorage so MembershipRegistration knows it's an upgrade
+              localStorage.setItem('membershipUpgradeMode', 'true');
+              onNavigate('membership-register');
+            }}
+            variant="outline"
+            disabled={!membershipData}
             className="w-full border-2 border-[#0A402F] text-[#0A402F] hover:bg-[#0A402F]/5 h-12 rounded-lg"
           >
-            View Benefits
+            <Edit size={18} className="mr-2" />
+            Change Tier
           </Button>
         </div>
+
+        {/* Renewal Confirmation Modal */}
+        {showRenewalModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowRenewalModal(false)}>
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-[#333333] font-['Lora'] text-xl font-bold mb-4 text-center">
+                🔄 Renew Your Membership?
+              </h3>
+
+              <div className="bg-[#FEFDF5] rounded-xl p-4 mb-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Current Tier</span>
+                  <span className="font-bold text-[#333333]">{membershipData?.tier}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Renewal Fee</span>
+                  <span className="font-bold text-[#0A402F]">RM{getTierPrice(membershipData?.tier)}/year</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">New Expiry</span>
+                  <span className="font-bold text-[#B8860B]">
+                    {newExpiryDate.toLocaleDateString('en-MY', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowRenewalModal(false)}
+                  variant="outline"
+                  className="flex-1 border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowRenewalModal(false);
+                    onNavigate('membership-renewal-payment');
+                  }}
+                  className="flex-1 bg-[#0A402F] hover:bg-[#0A402F]/90"
+                >
+                  Proceed to Payment
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Member Benefits Section */}
         <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm">
@@ -100,6 +228,10 @@ export function MembershipViewCard({ onNavigate }: MembershipViewCardProps) {
             <li className="flex items-start">
               <span className="text-[#B8860B] mr-2">✓</span>
               <span className="text-[#333333]">Exclusive member-only tours</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-[#B8860B] mr-2">✓</span>
+              <span className="text-[#333333]">Free tours at Rumah Penghulu Abu Seman</span>
             </li>
           </ul>
         </div>

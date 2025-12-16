@@ -1,4 +1,4 @@
-import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User, MapPin } from 'lucide-react';
+import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User, Ticket, MapPin } from 'lucide-react';
 import bwmLogo from '../assets/BWM logo.png';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
@@ -12,6 +12,7 @@ interface ProfileScreenProps {
 }
 
 const menuItems = [
+  { id: 'tickets', icon: Ticket, label: 'My Tickets', screen: 'my-tickets' },
   { id: 'donations', icon: History, label: 'Donation History', screen: 'donation-history' },
   { id: 'membership', icon: CreditCard, label: 'My Membership Card', screen: 'membership' },
   { id: 'edit-profile', icon: UserIcon, label: 'Edit Profile', screen: 'edit-profile' },
@@ -40,7 +41,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
     refreshUser();
   }, [user]);
 
-  // Fetch user's registered events
+// Fetch user's registered events
   useEffect(() => {
     const loadRegisteredEvents = async () => {
       setLoadingEvents(true);
@@ -65,7 +66,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
   const userCity = user?.user_metadata?.city || '';
   const userState = user?.user_metadata?.state || '';
   const userInitial = userName.charAt(0).toUpperCase();
-  
+
   // Format full address
   const formatAddress = () => {
     const parts = [];
@@ -82,7 +83,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
     }
     return parts.length > 0 ? parts.join(', ') : 'Not provided';
   };
-  
+
   const fullAddress = formatAddress();
 
   return (
@@ -110,7 +111,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
               <p className="text-[#333333] opacity-70 text-sm">{userEmail}</p>
             </div>
           </div>
-          
+
           {/* Contact Information */}
           <div className="border-t pt-4 mt-4 space-y-3">
             <div>
@@ -133,7 +134,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
           <div className="p-4 border-b border-gray-100">
             <h3 className="text-[#333333] font-['Lora'] text-lg" style={{ fontWeight: 600 }}>My Registered Events</h3>
           </div>
-          
+
           {loadingEvents ? (
             <div className="p-6 text-center">
               <div className="w-6 h-6 border-2 border-[#0A402F] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -192,9 +193,9 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
             <button
               key={item.id}
               onClick={() => onNavigate(item.screen)}
-              className={`w-full flex items-center justify-between p-4 hover:bg-[#0A402F]/5 transition-colors ${
-                index !== menuItems.length - 1 ? 'border-b border-gray-200' : ''
-              }`}
+              className={`w-full flex items-center justify-between p-4 hover:bg-[#0A402F]/5 transition-colors 
+                ${index !== menuItems.length - 1 ? 'border-b border-gray-200' : ''
+                }`}
             >
               <div className="flex items-center gap-3">
                 <item.icon className="text-[#0A402F]" size={20} />
@@ -206,7 +207,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
         </div>
 
         {/* Log Out Button */}
-        <button 
+        <button
           onClick={handleLogout}
           className="w-full flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm hover:bg-[#d4183d]/5 transition-colors"
         >
@@ -219,33 +220,33 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
       </main>
 
       {/* TOP-LEVEL: Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
-          <button 
+          <button
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('donate')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('events')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('profile')}
             className="flex flex-col items-center gap-1 text-[#0A402F]"
           >
