@@ -83,11 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: { message: 'Supabase is not configured. Please set up your .env file.' } as AuthError };
     }
-    
+
     const { data, error } = await supabase.auth.updateUser({
       data: updates,
     });
-    
+
     // Refresh user data after update
     if (!error && data.user) {
       setUser(data.user);
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session.user);
       }
     }
-    
+
     return { error };
   };
 
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) {
       return { error: { message: 'User is not authenticated. Please sign in again.' } as AuthError };
     }
-    
+
     try {
       const { data, error } = await supabase.auth.updateUser({
         data: {
@@ -123,12 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           address_complete: true,
         },
       });
-      
+
       if (error) {
         console.error('Supabase updateUser error:', error);
         return { error };
       }
-      
+
       // Refresh user data after update
       if (data.user) {
         setUser(data.user);
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(session.user);
         }
       }
-      
+
       return { error: null };
     } catch (err) {
       console.error('updateAddress exception:', err);
@@ -163,12 +163,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: { message: 'Supabase is not configured. Please set up your .env file.' } as AuthError };
     }
-    
+
     // Send OTP via Supabase phone auth (uses Twilio if configured)
     const { error } = await supabase.auth.signInWithOtp({
       phone: phoneNumber,
     });
-    
+
     return { error };
   };
 
@@ -176,26 +176,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: { message: 'Supabase is not configured. Please set up your .env file.' } as AuthError };
     }
-    
+
     const currentUser = user;
     const isProfileUpdate = !!currentUser;
     const currentUserId = currentUser?.id;
-    
+
     // Save all existing metadata before verification (to preserve user details)
     // This includes: full_name, email, address_line1, address_line2, postcode, city, state, etc.
     const existingMetadata = currentUser?.user_metadata || {};
-    
+
     // Verify OTP
     const { data, error } = await supabase.auth.verifyOtp({
       phone: phoneNumber,
       token: token,
       type: 'sms',
     });
-    
+
     if (error) {
       return { error };
     }
-    
+
     // After verification, restore ALL user metadata and add phone_verified
     // This ensures full_name, email, address, and all other details are preserved
     // Note: email is stored in user.email (not user_metadata), so it's automatically preserved
@@ -206,22 +206,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ensure email is also in metadata as backup (though it's primarily in user.email)
       email: currentUser?.email || data.user?.email || existingMetadata.email,
     };
-    
+
     // If this was a profile update, increment phone change count
     if (isProfileUpdate && currentUserId) {
-      updatedMetadata.phone_change_count = (existingMetadata.phone_change_count || 0) + 1;
+      (updatedMetadata as any).phone_change_count = (existingMetadata.phone_change_count || 0) + 1;
     }
-    
+
     // Update user with all preserved metadata plus phone verification
     const { error: updateError } = await supabase.auth.updateUser({
       data: updatedMetadata,
     });
-    
+
     if (updateError) {
       console.error('Error updating user metadata after phone verification:', updateError);
       return { error: updateError };
     }
-    
+
     // Refresh session to get updated user data with all details including email
     // Get fresh user data to ensure email is properly loaded
     const { data: { user: freshUser } } = await supabase.auth.getUser();
@@ -238,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setUser(data.session.user);
     }
-    
+
     return { error: null };
   };
 
@@ -262,4 +262,3 @@ export function useAuth() {
   }
   return context;
 }
-

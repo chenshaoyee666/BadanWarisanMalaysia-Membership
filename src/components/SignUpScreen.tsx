@@ -124,11 +124,11 @@ export function SignUpScreen({ onNavigate, onSignUp }: SignUpScreenProps) {
 
   {/* Logo and Text Section - centered */}
   <div className="flex flex-col items-center">
-    <img 
-      src={bwmLogo} 
-      alt="Badan Warisan Malaysia Logo" 
-      className="w-20 h-20 rounded-2xl mb-4"
-    />
+  <img 
+  src={bwmLogo} 
+  alt="Badan Warisan Malaysia Logo" 
+  className="w-15 h-15 rounded-2xl mb-4"
+/>
     <h1 className="text-white font-['Lora'] text-2xl font-semibold text-center">
       Badan Warisan Malaysia
     </h1>
