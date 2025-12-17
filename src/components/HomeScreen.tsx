@@ -108,7 +108,7 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
           <Button 
             variant="outline" 
             className="border-2 border-[#0A402F] text-[#0A402F] hover:bg-[#0A402F]/5 h-14 rounded-xl"
-            onClick={() => onNavigate('membership')}
+            onClick={() => onNavigate('membership-register')}
           >
             Membership
           </Button>

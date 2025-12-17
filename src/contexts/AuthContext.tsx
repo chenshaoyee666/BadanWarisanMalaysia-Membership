@@ -112,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // First, update user metadata in auth
       const { data, error } = await supabase.auth.updateUser({
         data: {
           ...user.user_metadata,
@@ -127,6 +128,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Supabase updateUser error:', error);
         return { error };
+      }
+
+      // Also update the profiles table in the database
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .update({
+          address_line1: address.address_line1,
+          address_line2: address.address_line2,
+          postcode: address.postcode,
+          city: address.city,
+          state: address.state,
+        })
+        .eq('id', user.id);
+
+      if (dbError) {
+        console.error('Database update error:', dbError);
+        // Return error if profiles table update fails
+        return { error: { message: `Failed to update profile: ${dbError.message}` } as AuthError };
       }
 
       // Refresh user data after update
