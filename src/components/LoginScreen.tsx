@@ -78,11 +78,11 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* Header with Logo */}
       <div className="bg-[#0A402F] px-6 py-8 flex flex-col items-center justify-center">
-      <img 
-  src={bwmLogo} 
-  alt="Badan Warisan Malaysia Logo" 
-  className="w-15 h-15 rounded-2xl mb-4"
-/>
+        <img 
+          src={bwmLogo} 
+          alt="Badan Warisan Malaysia Logo" 
+          className="w-20 h-20 rounded-2xl mb-4"
+        />
         <h1 className="text-white font-['Lora'] text-2xl font-semibold text-center">
           Badan Warisan Malaysia
         </h1>

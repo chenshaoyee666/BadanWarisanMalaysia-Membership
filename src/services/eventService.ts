@@ -131,31 +131,23 @@ export async function fetchEventById(eventId: string): Promise<{ data: Event | n
   }
 }
 
-// Helper to get the storage key for a specific user
-function getDemoRegistrationKey(userId?: string, email?: string): string {
-  const identifier = userId || email || 'anonymous';
-  return `demo_registrations_${identifier}`;
-}
-
-// Helper to get demo registrations from localStorage for a specific user
-function getDemoRegistrations(userId?: string, email?: string): string[] {
+// Helper to get demo registrations from localStorage
+function getDemoRegistrations(): string[] {
   try {
-    const key = getDemoRegistrationKey(userId, email);
-    const stored = localStorage.getItem(key);
+    const stored = localStorage.getItem('demo_registrations');
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 }
 
-// Helper to save demo registration to localStorage for a specific user
-function saveDemoRegistration(eventId: string, userId?: string, email?: string): void {
+// Helper to save demo registration to localStorage
+function saveDemoRegistration(eventId: string): void {
   try {
-    const key = getDemoRegistrationKey(userId, email);
-    const current = getDemoRegistrations(userId, email);
+    const current = getDemoRegistrations();
     if (!current.includes(eventId)) {
       current.push(eventId);
-      localStorage.setItem(key, JSON.stringify(current));
+      localStorage.setItem('demo_registrations', JSON.stringify(current));
     }
   } catch (e) {
     console.error('Error saving demo registration:', e);
@@ -171,8 +163,8 @@ export async function registerForEvent(
   userId?: string,
   isMember?: boolean
 ): Promise<{ data: EventRegistration | null; error: Error | null }> {
-  // Use demo mode during development or if Supabase is not configured
-  if (USE_DEMO_DATA || !isSupabaseConfigured) {
+  // Use demo mode if Supabase is not configured
+  if (!isSupabaseConfigured) {
     // Simulate successful registration in demo mode
     const mockRegistration: EventRegistration = {
       id: `demo-${Date.now()}`,
@@ -185,57 +177,40 @@ export async function registerForEvent(
       registration_date: new Date().toISOString(),
       status: 'confirmed',
     };
-    
-    // Save to localStorage for demo mode (user-specific)
-    saveDemoRegistration(eventId, userId, formData.email);
-    
-    // Simulate network delay
+    saveDemoRegistration(eventId);
     await new Promise(resolve => setTimeout(resolve, 800));
-    
     return { data: mockRegistration, error: null };
   }
 
   try {
-    const registration: Omit<EventRegistration, 'id' | 'created_at'> = {
-      event_id: eventId,
-      user_id: userId,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      is_member: isMember,
-      registration_date: new Date().toISOString(),
-      status: 'confirmed',
-    };
+    // Find event details to snapshot
+    const event = dummyEvents.find(e => e.id === eventId);
+    if (!event) {
+      return { data: null, error: new Error('Event not found') };
+    }
 
-    const { data, error } = await supabase
-      .from('registrations')
-      .insert([registration])
-      .select()
-      .single();
+    const { error } = await supabase
+      .from('event_registrations')
+      .insert({
+        user_id: userId,
+        event_id: event.id,
+        event_title: event.title,
+        event_date: event.date,
+        event_location: event.location,
+        event_image_url: event.poster_url,
+        registrant_name: formData.name,
+        registrant_email: formData.email,
+        registrant_phone: formData.phone,
+        status: 'registered'
+      });
 
     if (error) {
       console.error('Error registering for event:', error);
-      // Fall back to demo registration on error
-      const mockRegistration: EventRegistration = {
-        id: `demo-${Date.now()}`,
-        event_id: eventId,
-        user_id: userId,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        is_member: isMember,
-        registration_date: new Date().toISOString(),
-        status: 'confirmed',
-      };
-      return { data: mockRegistration, error: null };
+      throw error;
     }
 
-    return { data: data as EventRegistration, error: null };
-  } catch (err) {
-    console.error('Exception registering for event:', err);
-    // Fall back to demo registration on error
-    const mockRegistration: EventRegistration = {
-      id: `demo-${Date.now()}`,
+    // Return a constructed response matching the interface
+    const response: EventRegistration = {
       event_id: eventId,
       user_id: userId,
       name: formData.name,
@@ -243,9 +218,13 @@ export async function registerForEvent(
       phone: formData.phone,
       is_member: isMember,
       registration_date: new Date().toISOString(),
-      status: 'confirmed',
+      status: 'confirmed'
     };
-    return { data: mockRegistration, error: null };
+
+    return { data: response, error: null };
+  } catch (err: any) {
+    console.error('Exception registering for event:', err);
+    return { data: null, error: err };
   }
 }
 
@@ -264,10 +243,10 @@ export async function checkRegistration(
 
   try {
     const { data, error } = await supabase
-      .from('registrations')
+      .from('event_registrations')
       .select('id')
       .eq('event_id', eventId)
-      .eq('email', email)
+      .eq('registrant_email', email)
       .maybeSingle();
 
     if (error) {
@@ -289,57 +268,44 @@ export async function fetchUserRegisteredEvents(
   userId?: string,
   email?: string
 ): Promise<{ data: Event[] | null; error: Error | null }> {
-  // Demo mode: return events the user has registered for (user-specific)
-  if (USE_DEMO_DATA || !isSupabaseConfigured) {
-    const registeredEventIds = getDemoRegistrations(userId, email);
+  // Demo mode: return events the user has registered for
+  if (!isSupabaseConfigured) {
+    const registeredEventIds = getDemoRegistrations();
     const registeredEvents = dummyEvents.filter(event => registeredEventIds.includes(event.id));
     return { data: registeredEvents, error: null };
   }
 
   try {
-    // First get the user's registrations
-    let query = supabase
-      .from('registrations')
-      .select('event_id');
-    
-    if (userId) {
-      query = query.eq('user_id', userId);
-    } else if (email) {
-      query = query.eq('email', email);
-    } else {
-      return { data: [], error: null };
-    }
+    if (!userId) return { data: [], error: null };
 
-    const { data: registrations, error: regError } = await query;
-
-    if (regError) {
-      console.error('Error fetching registrations:', regError);
-      return { data: null, error: regError };
-    }
-
-    if (!registrations || registrations.length === 0) {
-      return { data: [], error: null };
-    }
-
-    // Get the event IDs
-    const eventIds = registrations.map(r => r.event_id);
-
-    // Fetch the actual events
-    const { data: events, error: eventsError } = await supabase
-      .from('events')
+    const { data, error } = await supabase
+      .from('event_registrations')
       .select('*')
-      .in('id', eventIds)
-      .order('date', { ascending: true });
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-    if (eventsError) {
-      console.error('Error fetching registered events:', eventsError);
-      return { data: null, error: eventsError };
+    if (error) {
+      console.error('Error fetching registrations:', error);
+      return { data: null, error: new Error(error.message) };
     }
 
-    return { data: events as Event[], error: null };
-  } catch (err) {
+    // Map back to Event interface
+    const events: Event[] = data.map((reg: any) => ({
+      id: reg.event_id,
+      title: reg.event_title,
+      date: reg.event_date,
+      time: '',
+      location: reg.event_location,
+      description: 'Registered Event',
+      poster_url: reg.event_image_url,
+      status: 'upcoming',
+      fee: 'RM0', // Placeholder
+      member_free: false
+    }));
+
+    return { data: events, error: null };
+  } catch (err: any) {
     console.error('Exception fetching user registered events:', err);
-    return { data: null, error: err as Error };
+    return { data: null, error: err };
   }
 }
-

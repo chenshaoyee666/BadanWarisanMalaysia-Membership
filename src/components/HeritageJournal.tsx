@@ -45,10 +45,10 @@ export function HeritageJournal({ onNavigate }: HeritageJournalProps) {
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <button onClick={() => onNavigate('profile')} className="text-white">
+          <button onClick={() => onNavigate('profile')} className="text-[#FEFDF5] mr-4">
             <ArrowLeft size={24} />
           </button>
-          <h2 className="text-white font-['Lora'] ml-4">My Journal</h2>
+          <h2 className="text-[#FEFDF5]">My Journal</h2>
         </div>
         <Button className="bg-[#B8860B] hover:bg-[#B8860B]/90 text-[#FEFDF5] rounded-full w-10 h-10 p-0">
           <Plus size={20} />

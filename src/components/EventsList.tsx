@@ -44,10 +44,12 @@ export function EventsList({ onNavigate, onSelectEvent }: EventsListProps) {
   return (
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* TOP-LEVEL: Main App Header */}
-      <header className="bg-[#0A402F] px-4 py-4 flex items-center">
-        <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
-        <h2 className="text-white font-['Lora'] flex-1 text-center">Events</h2>
-        <button className="text-white">
+      <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
+          <h2 className="text-[#FFFBEA] font-['Lora']">Events</h2>
+        </div>
+        <button className="text-[#FFFBEA]">
           <Bell size={24} />
         </button>
       </header>

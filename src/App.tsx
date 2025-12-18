@@ -22,8 +22,13 @@ import { SignUpScreen } from './components/SignUpScreen';
 import { AddressCompletionScreen } from './components/AddressCompletionScreen';
 import { MyTicketsScreen } from './components/MyTicketsScreen';
 import { AdminScannerScreen } from './components/AdminScannerScreen';
+import { DonationDetailsScreen } from './components/DonationDetailsScreen';
+import { FPXPaymentPage } from './components/FPXPaymentPage';
+import { CardPaymentPage } from './components/CardPaymentPage';
+import { GrabPayPaymentPage } from './components/GrabPayPaymentPage';
 import { useAuth } from './contexts/AuthContext';
 import { Event } from './types/event'
+import { donationService } from './services/donationService';
 
 type Screen =
   | 'login'
@@ -48,7 +53,11 @@ type Screen =
   | 'settings'
   | 'community-wall'
   | 'admin-scanner'
-  | 'membership-renewal-payment';
+  | 'membership-renewal-payment'
+  | 'donation-details'
+  | 'payment-fpx'
+  | 'payment-card'
+  | 'payment-grabpay';
 
 export default function App() {
   const { user, loading, isConfigured, isAddressComplete } = useAuth();
@@ -56,6 +65,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [justLoggedIn, setJustLoggedIn] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('general');
+  const [donationAmount, setDonationAmount] = useState<number>(50);
 
   useEffect(() => {
     // Redirect based on authentication state (only if Supabase is configured)
@@ -112,9 +123,29 @@ export default function App() {
     handleNavigate(screen);
   };
 
+  const handleDonateNavigate = (screen: string, params?: { campaignId: string }) => {
+    if (params?.campaignId) {
+      setSelectedCampaignId(params.campaignId);
+    }
+    handleNavigateSimple(screen);
+  };
+
   // Handler for selecting an event
   const handleSelectEvent = (event: Event) => {
     setSelectedEvent(event);
+  };
+
+  // Helper to record donation
+  const handlePaymentSuccess = async (method: 'fpx' | 'card' | 'grabpay') => {
+    try {
+      await donationService.addDonation(donationAmount, method, selectedCampaignId);
+      alert('Payment Successful! Thank you for your donation.');
+      handleNavigateSimple('home');
+    } catch (error) {
+      console.error('Donation record failed', error);
+      alert('Payment Successful, but failed to record in leaderboard. Please contact support.');
+      handleNavigateSimple('home');
+    }
   };
 
   // Show loading state while checking auth
@@ -219,7 +250,7 @@ export default function App() {
 
       {/* Placeholder screens for donate and settings */}
       {currentScreen === 'donate' && (
-        <DonateScreen onNavigate={handleNavigateSimple} />
+        <DonateScreen onNavigate={handleDonateNavigate} />
       )}
 
       {currentScreen === 'edit-profile' && (
@@ -238,8 +269,50 @@ export default function App() {
         <AdminScannerScreen onNavigate={handleNavigateSimple} />
       )}
 
+      {currentScreen === 'admin-scanner' && (
+        <AdminScannerScreen onNavigate={handleNavigateSimple} />
+      )}
+
       {currentScreen === 'membership-renewal-payment' && (
         <MembershipRenewalPayment onNavigate={handleNavigateSimple} />
+      )}
+
+      {/* Donation Flow Screens */}
+      {currentScreen === 'donation-details' && (
+        <DonationDetailsScreen
+          data={{ campaignId: selectedCampaignId }}
+          onProceed={(amount, method) => {
+            setDonationAmount(amount);
+            if (method === 'fpx') handleNavigateSimple('payment-fpx');
+            if (method === 'card') handleNavigateSimple('payment-card');
+            if (method === 'grabpay') handleNavigateSimple('payment-grabpay');
+          }}
+          onBack={() => handleNavigateSimple('donate')}
+        />
+      )}
+
+      {currentScreen === 'payment-fpx' && (
+        <FPXPaymentPage
+          amount={donationAmount}
+          onBack={() => handleNavigateSimple('donation-details')}
+          onSuccess={() => handlePaymentSuccess('fpx')}
+        />
+      )}
+
+      {currentScreen === 'payment-card' && (
+        <CardPaymentPage
+          amount={donationAmount}
+          onBack={() => handleNavigateSimple('donation-details')}
+          onSuccess={() => handlePaymentSuccess('card')}
+        />
+      )}
+
+      {currentScreen === 'payment-grabpay' && (
+        <GrabPayPaymentPage
+          amount={donationAmount}
+          onBack={() => handleNavigateSimple('donation-details')}
+          onSuccess={() => handlePaymentSuccess('grabpay')}
+        />
       )}
     </div>
   );
