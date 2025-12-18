@@ -21,7 +21,7 @@ const menuItems = [
 
 export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps) {
   const { user, signOut } = useAuth();
-  const [registeredEvents, setRegisteredEvents] = useState<Event[]>([]);
+  const [registeredEvents, setRegisteredEvents] = useState<Partial<Event>[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
   // Refresh user data when component mounts or when navigating back
@@ -41,7 +41,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
     refreshUser();
   }, [user]);
 
-// Fetch user's registered events
+  // Fetch user's registered events
   useEffect(() => {
     const loadRegisteredEvents = async () => {
       setLoadingEvents(true);
@@ -93,7 +93,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
         <div className="flex items-center gap-3">
           <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
         </div>
-        <button className="text-white">
+        <button className="text-[#FFFBEA]">
           <Bell size={24} />
         </button>
       </header>
@@ -220,7 +220,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
       </main>
 
       {/* TOP-LEVEL: Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <button
             onClick={() => onNavigate('home')}
