@@ -177,10 +177,10 @@ export function EditProfileScreen({ onNavigate }: EditProfileScreenProps) {
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* SUB-PAGE: Simple Header with Back Button */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center gap-4">
-        <button onClick={() => onNavigate('profile')} className="text-white">
+        <button onClick={() => onNavigate('profile')} className="text-[#FFFBEA]">
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-white font-['Lora'] flex-1 text-center mr-6">Edit Profile</h2>
+        <h2 className="text-[#FFFBEA] font-['Lora'] flex-1 text-center mr-6">Edit Profile</h2>
       </header>
 
       {/* Content */}

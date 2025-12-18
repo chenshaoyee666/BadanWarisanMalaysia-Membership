@@ -82,10 +82,10 @@ export function CommunityWall({ onNavigate }: CommunityWallProps) {
     <div className="min-h-screen bg-[#FEFDF5] flex flex-col">
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center">
-        <button onClick={() => onNavigate('home')} className="text-white">
+        <button onClick={() => onNavigate('home')} className="text-[#FEFDF5] mr-4">
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-white font-['Lora'] flex-1 text-center mr-6">Community Wall</h2>
+        <h2 className="text-[#FEFDF5]">Community Wall</h2>
       </header>
 
       {/* Content */}
