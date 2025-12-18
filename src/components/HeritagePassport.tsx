@@ -57,10 +57,10 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
     <div className="min-h-screen bg-[#FEFDF5] flex flex-col">
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center">
-        <button onClick={() => onNavigate('profile')} className="text-[#FEFDF5] mr-4">
+        <button onClick={() => onNavigate('profile')} className="text-white">
           <ArrowLeft size={24} />
         </button>
-        <h2 className="text-[#FEFDF5]">Heritage Passport</h2>
+        <h2 className="text-white font-['Lora'] flex-1 text-center mr-6">Heritage Passport</h2>
       </header>
 
       {/* Content */}

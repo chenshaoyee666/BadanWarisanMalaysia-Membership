@@ -117,7 +117,7 @@ export function AddressCompletionScreen({ onNavigate, onComplete, isNewUser = fa
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-center relative">
-        <h2 className="text-[#FFFBEA] font-['Lora'] text-lg font-semibold">Complete Your Address</h2>
+        <h2 className="text-white font-['Lora'] text-lg font-semibold">Complete Your Address</h2>
       </header>
 
       {/* Main Content */}

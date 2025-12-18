@@ -131,23 +131,31 @@ export async function fetchEventById(eventId: string): Promise<{ data: Event | n
   }
 }
 
-// Helper to get demo registrations from localStorage
-function getDemoRegistrations(): string[] {
+// Helper to get the storage key for a specific user
+function getDemoRegistrationKey(userId?: string, email?: string): string {
+  const identifier = userId || email || 'anonymous';
+  return `demo_registrations_${identifier}`;
+}
+
+// Helper to get demo registrations from localStorage for a specific user
+function getDemoRegistrations(userId?: string, email?: string): string[] {
   try {
-    const stored = localStorage.getItem('demo_registrations');
+    const key = getDemoRegistrationKey(userId, email);
+    const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 }
 
-// Helper to save demo registration to localStorage
-function saveDemoRegistration(eventId: string): void {
+// Helper to save demo registration to localStorage for a specific user
+function saveDemoRegistration(eventId: string, userId?: string, email?: string): void {
   try {
-    const current = getDemoRegistrations();
+    const key = getDemoRegistrationKey(userId, email);
+    const current = getDemoRegistrations(userId, email);
     if (!current.includes(eventId)) {
       current.push(eventId);
-      localStorage.setItem('demo_registrations', JSON.stringify(current));
+      localStorage.setItem(key, JSON.stringify(current));
     }
   } catch (e) {
     console.error('Error saving demo registration:', e);
@@ -178,8 +186,8 @@ export async function registerForEvent(
       status: 'confirmed',
     };
     
-    // Save to localStorage for demo mode
-    saveDemoRegistration(eventId);
+    // Save to localStorage for demo mode (user-specific)
+    saveDemoRegistration(eventId, userId, formData.email);
     
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -281,9 +289,9 @@ export async function fetchUserRegisteredEvents(
   userId?: string,
   email?: string
 ): Promise<{ data: Event[] | null; error: Error | null }> {
-  // Demo mode: return events the user has registered for
+  // Demo mode: return events the user has registered for (user-specific)
   if (USE_DEMO_DATA || !isSupabaseConfigured) {
-    const registeredEventIds = getDemoRegistrations();
+    const registeredEventIds = getDemoRegistrations(userId, email);
     const registeredEvents = dummyEvents.filter(event => registeredEventIds.includes(event.id));
     return { data: registeredEvents, error: null };
   }
