@@ -1,5 +1,20 @@
-import { ChevronRight, CreditCard, History, Settings, LogOut, Bell, User as UserIcon, Home, DollarSign, Calendar, User, Ticket, MapPin } from 'lucide-react';
-import bwmLogo from '../assets/BWM logo.png';
+import {
+  ChevronRight,
+  CreditCard,
+  History,
+  Settings,
+  LogOut,
+  Bell,
+  User as UserIcon,
+  Home,
+  DollarSign,
+  Calendar,
+  User,
+  Ticket,
+  MapPin,
+  Lock // [1] Import Lock icon
+} from 'lucide-react';
+import bwmLogo from '../assets/BWM logo.png'; // Note: Check path if you moved this file
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
@@ -11,12 +26,15 @@ interface ProfileScreenProps {
   onSelectEvent?: (event: Event) => void;
 }
 
+// [2] Add Admin item to the menu list
 const menuItems = [
   { id: 'tickets', icon: Ticket, label: 'My Tickets', screen: 'my-tickets' },
   { id: 'donations', icon: History, label: 'Donation History', screen: 'donation-history' },
   { id: 'membership', icon: CreditCard, label: 'My Membership Card', screen: 'membership' },
   { id: 'edit-profile', icon: UserIcon, label: 'Edit Profile', screen: 'edit-profile' },
   { id: 'settings', icon: Settings, label: 'Settings', screen: 'settings' },
+  // Placed below Settings, above the Log Out button (which is separate)
+  { id: 'admin', icon: Lock, label: 'Admin Portal', screen: 'admin-portal' },
 ];
 
 export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps) {
@@ -24,16 +42,11 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
   const [registeredEvents, setRegisteredEvents] = useState<Partial<Event>[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
-  // Refresh user data when component mounts or when navigating back
+  // Refresh user data when component mounts
   useEffect(() => {
     const refreshUser = async () => {
       try {
-        // Get fresh user data including email (just like full_name from metadata)
         const { data: { user: freshUser } } = await supabase.auth.getUser();
-        if (freshUser) {
-          // The auth context will automatically update via onAuthStateChange
-          // This ensures we have the latest email and all user data after phone verification
-        }
       } catch (error) {
         console.error('Error refreshing user data:', error);
       }
@@ -67,7 +80,6 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
   const userState = user?.user_metadata?.state || '';
   const userInitial = userName.charAt(0).toUpperCase();
 
-  // Format full address
   const formatAddress = () => {
     const parts = [];
     if (userAddressLine1) parts.push(userAddressLine1);
@@ -88,7 +100,6 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
 
   return (
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
-      {/* TOP-LEVEL: Main App Header (NO Back Button) */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
@@ -98,7 +109,6 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
         </button>
       </header>
 
-      {/* Content */}
       <main className="flex-1 px-4 py-6 overflow-y-auto pb-24">
         {/* User Details */}
         <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
@@ -112,7 +122,6 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
             </div>
           </div>
 
-          {/* Contact Information */}
           <div className="border-t pt-4 mt-4 space-y-3">
             <div>
               <p className="text-[#333333] opacity-60 text-xs mb-1">Email Address</p>
@@ -158,7 +167,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
                   key={event.id}
                   className="p-4 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => {
-                    onSelectEvent?.(event);
+                    onSelectEvent?.(event as Event);
                     onNavigate('event-details');
                   }}
                 >
@@ -187,7 +196,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
           )}
         </div>
 
-        {/* Menu List */}
+        {/* Menu List - Automatically includes Admin Portal now */}
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6">
           {menuItems.map((item, index) => (
             <button
@@ -219,37 +228,22 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
         </button>
       </main>
 
-      {/* TOP-LEVEL: Bottom Navigation Bar */}
+      {/* Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
-          <button
-            onClick={() => onNavigate('home')}
-            className="flex flex-col items-center gap-1 text-gray-400"
-          >
+          <button onClick={() => onNavigate('home')} className="flex flex-col items-center gap-1 text-gray-400">
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-
-          <button
-            onClick={() => onNavigate('donate')}
-            className="flex flex-col items-center gap-1 text-gray-400"
-          >
+          <button onClick={() => onNavigate('donate')} className="flex flex-col items-center gap-1 text-gray-400">
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-
-          <button
-            onClick={() => onNavigate('events')}
-            className="flex flex-col items-center gap-1 text-gray-400"
-          >
+          <button onClick={() => onNavigate('events')} className="flex flex-col items-center gap-1 text-gray-400">
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-
-          <button
-            onClick={() => onNavigate('profile')}
-            className="flex flex-col items-center gap-1 text-[#0A402F]"
-          >
+          <button onClick={() => onNavigate('profile')} className="flex flex-col items-center gap-1 text-[#0A402F]">
             <User size={24} />
             <span className="text-xs font-['Inter']">Profile</span>
           </button>

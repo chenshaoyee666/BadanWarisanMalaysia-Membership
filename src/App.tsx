@@ -22,6 +22,7 @@ import { SignUpScreen } from './components/SignUpScreen';
 import { AddressCompletionScreen } from './components/AddressCompletionScreen';
 import { MyTicketsScreen } from './components/MyTicketsScreen';
 import { AdminScannerScreen } from './components/AdminScannerScreen';
+import AdminPortal from './components/admin/AdminPortal';
 import { DonationDetailsScreen } from './components/DonationDetailsScreen';
 import { FPXPaymentPage } from './components/FPXPaymentPage';
 import { CardPaymentPage } from './components/CardPaymentPage';
@@ -53,6 +54,7 @@ type Screen =
   | 'settings'
   | 'community-wall'
   | 'admin-scanner'
+  | 'admin-portal'
   | 'membership-renewal-payment'
   | 'donation-details'
   | 'payment-fpx'
@@ -269,8 +271,8 @@ export default function App() {
         <AdminScannerScreen onNavigate={handleNavigateSimple} />
       )}
 
-      {currentScreen === 'admin-scanner' && (
-        <AdminScannerScreen onNavigate={handleNavigateSimple} />
+      {currentScreen === 'admin-portal' && (
+        <AdminPortal onBack={() => handleNavigateSimple('profile')} />
       )}
 
       {currentScreen === 'membership-renewal-payment' && (
@@ -304,6 +306,12 @@ export default function App() {
           amount={donationAmount}
           onBack={() => handleNavigateSimple('donation-details')}
           onSuccess={() => handlePaymentSuccess('card')}
+        />
+      )}
+
+      {currentScreen === 'admin-portal' && (
+        <AdminPortal
+          onBack={() => setCurrentScreen('profile')}
         />
       )}
 
