@@ -102,9 +102,8 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
           {heritageSites.map((site) => (
             <div
               key={site.id}
-              className={`rounded-2xl p-6 relative overflow-hidden ${
-                site.visited ? 'bg-white shadow-lg' : 'bg-white opacity-60'
-              }`}
+              className={`rounded-2xl p-6 relative overflow-hidden ${site.visited ? 'bg-white shadow-lg' : 'bg-white opacity-60'
+                }`}
               style={{
                 borderColor: site.visited ? site.color : '#E5E7EB',
                 borderWidth: site.visited ? '3px' : '1px',
@@ -131,9 +130,8 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
               {/* Site Icon/Illustration */}
               <div className="mb-4 flex items-center justify-center">
                 <div
-                  className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                    site.visited ? 'opacity-100' : 'opacity-30'
-                  }`}
+                  className={`w-16 h-16 rounded-xl flex items-center justify-center ${site.visited ? 'opacity-100' : 'opacity-30'
+                    }`}
                   style={{
                     backgroundColor: site.visited ? `${site.color}20` : '#F3F4F6',
                   }}
@@ -152,9 +150,8 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
 
               {/* Site Name */}
               <p
-                className={`text-center mb-1 ${
-                  site.visited ? 'text-[#333333]' : 'text-gray-400'
-                }`}
+                className={`text-center mb-1 ${site.visited ? 'text-[#333333]' : 'text-gray-400'
+                  }`}
               >
                 {site.name}
               </p>

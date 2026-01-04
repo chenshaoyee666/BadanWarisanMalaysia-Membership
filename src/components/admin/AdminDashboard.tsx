@@ -12,9 +12,12 @@ import {
     Search,
     Loader2,
     Trash2,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Clock,
+    User,
+    MoreVertical
 } from 'lucide-react';
-import { supabase } from './supabase-client'; // Ensure this path is correct
+import { supabase } from './supabase-client';
 
 // --- Types ---
 interface Event {
@@ -25,7 +28,15 @@ interface Event {
     date: string;
     location: string;
     image_url?: string;
+    time?: string;
+    fee?: string;
 }
+
+// Mock data for reports to match design
+const MOCK_REPORTS = [
+    { id: 1, title: 'All Events Report', date: '1/4/2026', time: '2:53:37 PM' },
+    { id: 2, title: 'All Events Report', date: '1/4/2026', time: '2:38:27 PM' },
+];
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<'home' | 'create' | 'downloads'>('home');
@@ -37,13 +48,15 @@ const AdminDashboard = () => {
     const [newEvent, setNewEvent] = useState<Partial<Event>>({
         event_title: '',
         date: '',
+        time: '',
+        fee: '',
         location: '',
         description: '',
     });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
 
-    // --- 1. Fetch Events Logic ---
+    // --- Fetch Events ---
     const fetchEvents = async () => {
         setIsLoading(true);
         try {
@@ -65,11 +78,9 @@ const AdminDashboard = () => {
         fetchEvents();
     }, []);
 
-    // --- 2. Image Upload Logic ---
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            console.log("File selected:", file.name); // Debug log
             setImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -79,33 +90,24 @@ const AdminDashboard = () => {
         }
     };
 
-    // --- 3. CSV Logic (Integrated Locally) ---
+    // --- CSV Logic ---
     const handleDownloadCSV = () => {
         if (events.length === 0) {
             alert("No events to download.");
             return;
         }
-
-        // define headers
-        const headers = ['ID', 'Title', 'Date', 'Location', 'Description', 'Image URL'];
-
-        // map data
+        const headers = ['ID', 'Title', 'Date', 'Time', 'Location', 'Fee', 'Description', 'Image URL'];
         const rows = events.map(e => [
             e.id,
-            `"${e.event_title.replace(/"/g, '""')}"`, // Escape quotes
+            `"${e.event_title.replace(/"/g, '""')}"`,
             e.date,
+            e.time || '',
             `"${e.location.replace(/"/g, '""')}"`,
+            e.fee || '',
             `"${e.description.replace(/"/g, '""')}"`,
             e.image_url || ''
         ]);
-
-        // combine
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n');
-
-        // download
+        const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -116,50 +118,40 @@ const AdminDashboard = () => {
         document.body.removeChild(link);
     };
 
-    // --- 4. Submit Logic ---
+    // --- Submit Logic ---
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
             let publicImageUrl = '';
-
-            // Upload Image
             if (imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${Math.random()}.${fileExt}`;
                 const filePath = `${fileName}`;
-
-                // IMPORTANT: Ensure your bucket 'event_poster' is Public in Supabase Dashboard
                 const { error: uploadError } = await supabase.storage.from('event_poster').upload(filePath, imageFile);
-
-                if (uploadError) {
-                    console.error("Upload Error:", uploadError);
-                    throw new Error(`Image upload failed: ${uploadError.message}`);
-                }
-
+                if (uploadError) throw uploadError;
                 const { data } = supabase.storage.from('event_poster').getPublicUrl(filePath);
                 publicImageUrl = data.publicUrl;
             }
 
-            // Insert Database Record
             const { error: dbError } = await supabase.from('admin_event_post').insert([{
                 event_title: newEvent.event_title,
                 description: newEvent.description,
                 date: newEvent.date,
+                time: newEvent.time,
+                fee: newEvent.fee,
                 location: newEvent.location,
                 image_url: publicImageUrl
             }]);
 
             if (dbError) throw dbError;
 
-            // Reset
-            setNewEvent({ event_title: '', date: '', location: '', description: '', image_url: '' });
+            setNewEvent({ event_title: '', date: '', time: '', fee: '', location: '', description: '', image_url: '' });
             setImagePreview(null);
             setImageFile(null);
             await fetchEvents();
             setActiveTab('home');
             alert("Event created successfully!");
-
         } catch (error: any) {
             alert(`Error: ${error.message}`);
         } finally {
@@ -178,70 +170,102 @@ const AdminDashboard = () => {
         }
     };
 
-    // --- Views ---
-
     const renderDashboard = () => (
-        <div className="pb-32 animate-in fade-in slide-in-from-bottom-2 duration-300 bg-white min-h-screen">
-            <div className="px-6 pt-8 pb-4 bg-white sticky top-0 z-10">
-                <div className="mb-4">
+        <div className="pb-32 animate-in fade-in slide-in-from-bottom-2 duration-300 min-h-screen bg-gray-50/50">
+            {/* Header */}
+            <div className="px-6 pt-8 pb-6 bg-white sticky top-0 z-10 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)]">
+                <div className="mb-6">
                     <h1 className="text-2xl font-bold text-[#003829]">My Events</h1>
                     <p className="text-xs text-gray-500 font-medium mt-1">
                         {isLoading ? 'Updating...' : `${events.length} Active Events`}
                     </p>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#00A884] transition-colors" size={18} />
                     <input
                         type="text"
                         placeholder="Search events..."
-                        className="w-full pl-11 pr-4 py-3 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00A884]/20 transition-all placeholder:text-gray-400"
+                        className="w-full pl-11 pr-4 py-3.5 bg-gray-100/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#00A884]/20 focus:bg-white transition-all placeholder:text-gray-400"
                     />
                 </div>
             </div>
 
-            <div className="px-6 space-y-4">
+            {/* Event Grid */}
+            <div className="px-4 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-24">
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-32 text-gray-400">
+                    <div className="col-span-full flex flex-col items-center justify-center py-32 text-gray-400">
                         <Loader2 className="animate-spin mb-2" size={32} />
                         <p className="text-sm">Loading events...</p>
                     </div>
                 ) : events.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center pt-24 text-center px-8">
-                        <p className="text-gray-400 text-sm font-medium leading-relaxed">
-                            No events found. Create one to get started!
-                        </p>
+                    <div className="col-span-full flex flex-col items-center justify-center pt-24 text-center px-8">
+                        <p className="text-gray-400 text-sm font-medium leading-relaxed">No events found. Create one to get started!</p>
                     </div>
                 ) : (
                     events.map((event) => (
-                        <div key={event.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-[0.98] transition-transform duration-100">
-                            <div className="h-36 w-full bg-gray-100 relative">
+                        <div key={event.id} className="bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 group">
+                            {/* Image Section */}
+                            <div className="h-44 w-full bg-gray-100 relative overflow-hidden">
                                 {event.image_url ? (
-                                    <img src={event.image_url} alt={event.event_title} className="w-full h-full object-cover" />
+                                    <img
+                                        src={event.image_url}
+                                        alt={event.event_title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-300">
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-50 text-emerald-300">
                                         <ImageIcon size={32} />
                                     </div>
                                 )}
-                                <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold text-[#00A884] shadow-sm uppercase tracking-wide">
+                                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#003829] shadow-sm uppercase tracking-wide">
                                     Active
                                 </div>
                             </div>
-                            <div className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-gray-900 text-lg leading-tight">{event.event_title}</h3>
-                                    <button onClick={() => handleDeleteEvent(event.id)} className="text-gray-300 p-2 -mr-2 hover:text-red-500 transition-colors">
-                                        <Trash2 size={18} />
+
+                            {/* Content Section */}
+                            <div className="p-5">
+                                <div className="flex justify-between items-start mb-3">
+                                    <h3 className="font-bold text-[#003829] text-xl leading-tight line-clamp-1">{event.event_title}</h3>
+                                    <button className="text-gray-300 hover:text-gray-600 transition-colors">
+                                        <MoreVertical size={18} />
                                     </button>
                                 </div>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
+
+                                {/* Date & Location */}
+                                <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-4">
                                     <div className="flex items-center gap-1.5">
-                                        <Calendar size={13} className="text-[#00A884]" />
+                                        <Calendar size={14} className="text-[#00A884]" strokeWidth={2.5} />
                                         <span>{event.date}</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                                        <MapPin size={13} className="text-[#00A884]" />
-                                        <span className="truncate">{event.location}</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin size={14} className="text-[#00A884]" strokeWidth={2.5} />
+                                        <span className="truncate max-w-[100px]">{event.location}</span>
                                     </div>
+                                </div>
+
+                                {/* Fee Box */}
+                                <div className="bg-[#ebfbf7] rounded-lg px-4 py-3 flex justify-between items-center mb-4">
+                                    <span className="text-xs font-semibold text-[#008f70]">Registration Fee</span>
+                                    <span className="text-sm font-bold text-[#003829]">{event.fee || 'Free'}</span>
+                                </div>
+
+                                {/* Description */}
+                                <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-4">
+                                    {event.description}
+                                </p>
+
+                                {/* Footer */}
+                                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                                    <div className="flex items-center gap-1.5 text-[#00A884] font-semibold text-sm">
+                                        <span className='text-lg'>0</span>
+                                        <span className="text-xs font-medium text-gray-400">Registered</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteEvent(event.id)}
+                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-500 transition-all"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -253,78 +277,73 @@ const AdminDashboard = () => {
 
     const renderCreateEvent = () => (
         <div className="bg-white min-h-screen pb-32 animate-in slide-in-from-right duration-300">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 bg-white z-20">
-                <button onClick={() => setActiveTab('home')} className="p-2 -ml-2 text-gray-600 rounded-full hover:bg-gray-50">
+            <div className="px-5 py-4 flex items-center gap-3 sticky top-0 bg-white z-20">
+                <button onClick={() => setActiveTab('home')} className="p-2 -ml-2 text-gray-500 rounded-full hover:bg-gray-50 transition-colors">
                     <ChevronLeft size={24} />
                 </button>
-                <h2 className="font-bold text-lg text-gray-900">Create New Event</h2>
+                <h2 className="font-bold text-xl text-[#003829]">Create New Event</h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
-
-                {/* Image Upload - Fixed Layout */}
-                <div className="w-full">
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Event Poster</label>
-                    <div className="w-full h-48 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#00A884] transition-colors bg-gray-50 relative overflow-hidden group">
+            <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-8 max-w-3xl mx-auto">
+                {/* Poster Upload */}
+                <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Event Poster</label>
+                    <div className="w-full h-56 rounded-3xl border-2 border-dashed border-gray-200 hover:border-[#00A884] transition-colors bg-gray-50/50 relative overflow-hidden group">
                         {imagePreview ? (
                             <>
                                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                                <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-full backdrop-blur-sm">
-                                    <X size={16} />
-                                </button>
+                                <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-3 right-3 bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-full backdrop-blur-sm transition-all shadow-sm"><X size={16} /></button>
                             </>
                         ) : (
-                            <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer w-full h-full z-10">
-                                <div className="bg-white p-3 rounded-full shadow-sm mb-2 group-hover:scale-110 transition-transform">
-                                    <UploadCloud className="text-[#00A884]" size={24} />
+                            <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer w-full h-full z-10 hover:bg-gray-50 transition-colors">
+                                <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 text-[#00A884]">
+                                    <UploadCloud size={24} strokeWidth={2.5} />
                                 </div>
                                 <span className="text-xs font-semibold text-gray-500">Tap to upload image</span>
-                                {/* Input must be here */}
                                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                             </label>
                         )}
                     </div>
                 </div>
 
-                {/* Form Inputs - Fixed Spacing & Borders */}
-                <div className="space-y-5">
+                {/* Core Info */}
+                <div className="space-y-6">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Title</label>
-                        <input required type="text" placeholder="e.g. Annual Dinner"
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#00A884] focus:ring-4 focus:ring-[#00A884]/10 transition-all outline-none font-medium text-gray-900"
-                            value={newEvent.event_title} onChange={(e) => setNewEvent({ ...newEvent, event_title: e.target.value })}
-                        />
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Title</label>
+                        <input required type="text" placeholder="e.g. Annual Dinner" className="w-full px-5 py-4 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-[#00A884]/20 focus:border-[#00A884] transition-all outline-none font-semibold text-gray-700 placeholder:text-gray-400 placeholder:font-normal" value={newEvent.event_title} onChange={(e) => setNewEvent({ ...newEvent, event_title: e.target.value })} />
                     </div>
 
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Date</label>
-                            <input required type="date"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#00A884] focus:ring-4 focus:ring-[#00A884]/10 transition-all outline-none text-sm font-medium"
-                                value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                            />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Date</label>
+                            <input required type="date" className="w-full px-5 py-4 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-[#00A884]/20 focus:border-[#00A884] transition-all outline-none text-sm font-semibold text-gray-700" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} />
                         </div>
-                        <div className="flex-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Location</label>
-                            <input required type="text" placeholder="Venue"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#00A884] focus:ring-4 focus:ring-[#00A884]/10 transition-all outline-none text-sm font-medium"
-                                value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                            />
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Location</label>
+                            <input required type="text" placeholder="Venue" className="w-full px-5 py-4 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-[#00A884]/20 focus:border-[#00A884] transition-all outline-none text-sm font-semibold text-gray-700 placeholder:text-gray-400 placeholder:font-normal" value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} />
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Registration Fee (RM)</label>
+                            <input required type="text" placeholder="0.00" className="w-full px-5 py-4 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-[#00A884]/20 focus:border-[#00A884] transition-all outline-none text-sm font-semibold text-gray-700 placeholder:text-gray-400 placeholder:font-normal" value={newEvent.fee} onChange={(e) => setNewEvent({ ...newEvent, fee: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Time</label>
+                            <input required type="time" className="w-full px-5 py-4 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-[#00A884]/20 focus:border-[#00A884] transition-all outline-none text-sm font-semibold text-gray-700" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} />
+                        </div>
+                    </div>
+
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Description</label>
-                        <textarea required placeholder="Event details..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#00A884] focus:ring-4 focus:ring-[#00A884]/10 transition-all outline-none min-h-[120px] text-sm leading-relaxed"
-                            value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                        />
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</label>
+                        <textarea required placeholder="Event details..." className="w-full px-5 py-4 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-[#00A884]/20 focus:border-[#00A884] transition-all outline-none min-h-[140px] text-sm leading-relaxed text-gray-700 placeholder:text-gray-400 placeholder:font-normal resize-none" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} />
                     </div>
                 </div>
 
-                <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-gray-100 safe-area-bottom z-30">
-                    <button type="submit" disabled={isSubmitting} className="w-full bg-[#00A884] disabled:bg-[#00A884]/60 text-white font-bold py-4 rounded-xl shadow-lg shadow-[#00A884]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                        {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 safe-area-bottom z-30">
+                    <button type="submit" disabled={isSubmitting} className="w-full max-w-3xl mx-auto bg-[#00A884] hover:bg-[#008f70] disabled:bg-[#00A884]/60 text-white font-bold py-4 rounded-xl shadow-lg shadow-[#00A884]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} strokeWidth={2.5} />}
                         {isSubmitting ? 'Publishing...' : 'Publish Event'}
                     </button>
                 </div>
@@ -333,73 +352,80 @@ const AdminDashboard = () => {
     );
 
     const renderDownloads = () => (
-        <div className="pb-32 bg-white min-h-screen animate-in slide-in-from-right duration-300">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 bg-white z-20">
-                <button onClick={() => setActiveTab('home')} className="p-2 -ml-2 text-gray-600 rounded-full hover:bg-gray-50">
-                    <ChevronLeft size={24} />
+        <div className="pb-32 bg-gray-50/50 min-h-screen animate-in slide-in-from-right duration-300">
+            <div className="px-6 py-5 bg-white flex items-center justify-between sticky top-0 z-20 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)]">
+                <h2 className="font-bold text-2xl text-[#003829]">Reports</h2>
+                <button onClick={handleDownloadCSV} className="bg-[#00A884] hover:bg-[#008f70] text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2">
+                    <Plus size={16} strokeWidth={2.5} /> Generate New
                 </button>
-                <h2 className="font-bold text-lg text-gray-900">Reports</h2>
             </div>
 
-            <div className="p-6 flex flex-col items-center justify-center pt-20">
-                <div className="bg-[#00A884]/10 p-6 rounded-full mb-6">
-                    <FileSpreadsheet className="text-[#00A884]" size={48} />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Export Events Data</h3>
-                <p className="text-gray-500 text-center text-sm mb-8 max-w-xs">
-                    Download a CSV file containing details of all {events.length} active events currently in the system.
-                </p>
-
-                <button
-                    onClick={handleDownloadCSV}
-                    className="w-full max-w-xs bg-[#003829] text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3"
-                >
-                    <Download size={20} />
-                    Download CSV
-                </button>
+            <div className="p-6 max-w-2xl mx-auto space-y-4">
+                {MOCK_REPORTS.map((report) => (
+                    <div key={report.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-[#00A884]">
+                                <FileSpreadsheet size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 text-sm">{report.title} - {report.date}</h3>
+                                <p className="text-xs text-gray-400 mt-0.5">Generated: {report.date}, {report.time}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={handleDownloadCSV} className="px-4 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2">
+                                <Download size={14} /> Download CSV
+                            </button>
+                            <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors">
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900 max-w-md mx-auto relative flex flex-col shadow-2xl">
+        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 max-w-7xl mx-auto relative flex flex-col shadow-2xl">
             <div className="flex-1 overflow-y-auto hide-scrollbar">
                 {activeTab === 'home' && renderDashboard()}
                 {activeTab === 'create' && renderCreateEvent()}
                 {activeTab === 'downloads' && renderDownloads()}
             </div>
 
-            {/* Custom Floating Navigation Bar */}
+            {/* Bottom Navigation */}
             {activeTab !== 'create' && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 h-[80px] max-w-md mx-auto z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                    <div className="relative flex justify-between items-center h-full px-12">
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 h-[80px] max-w-7xl mx-auto z-20 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
+                    <div className="relative flex justify-around items-center h-full px-6">
                         <button
                             onClick={() => setActiveTab('home')}
-                            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'home' ? 'text-[#00A884]' : 'text-gray-400'}`}
+                            className={`flex flex-col items-center gap-1.5 transition-colors w-16 ${activeTab === 'home' ? 'text-[#00A884]' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                            <div className={`p-1.5 rounded-lg ${activeTab === 'home' ? 'bg-[#00A884]/10' : ''}`}>
-                                <Calendar size={22} strokeWidth={2.5} />
+                            <div className={`p-1 rounded-lg transition-all ${activeTab === 'home' ? '-translate-y-1' : ''}`}>
+                                <Calendar size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
                             </div>
-                            <span className="text-[10px] font-bold">Events</span>
+                            <span className="text-[10px] font-bold tracking-wide">Events</span>
                         </button>
 
-                        <div className="absolute left-1/2 -translate-x-1/2 -top-6">
+                        {/* Floating Action Button */}
+                        <div className="relative -top-8">
                             <button
                                 onClick={() => setActiveTab('create')}
-                                className="bg-[#00A884] text-white w-14 h-14 rounded-full shadow-lg shadow-[#00A884]/40 flex items-center justify-center active:scale-95 transition-transform hover:bg-[#008f70] border-4 border-white"
+                                className="bg-[#00A884] hover:bg-[#008f70] text-white w-16 h-16 rounded-full shadow-[0_8px_20px_-4px_rgba(0,168,132,0.4)] flex items-center justify-center active:scale-95 transition-all border-[6px] border-white"
                             >
-                                <Plus size={28} strokeWidth={3} />
+                                <Plus size={32} strokeWidth={3} />
                             </button>
                         </div>
 
                         <button
                             onClick={() => setActiveTab('downloads')}
-                            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'downloads' ? 'text-[#00A884]' : 'text-gray-400'}`}
+                            className={`flex flex-col items-center gap-1.5 transition-colors w-16 ${activeTab === 'downloads' ? 'text-[#00A884]' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                            <div className={`p-1.5 rounded-lg ${activeTab === 'downloads' ? 'bg-[#00A884]/10' : ''}`}>
-                                <Download size={22} strokeWidth={2.5} />
+                            <div className={`p-1 rounded-lg transition-all ${activeTab === 'downloads' ? '-translate-y-1' : ''}`}>
+                                <FileSpreadsheet size={24} strokeWidth={activeTab === 'downloads' ? 2.5 : 2} />
                             </div>
-                            <span className="text-[10px] font-bold">Reports</span>
+                            <span className="text-[10px] font-bold tracking-wide">Reports</span>
                         </button>
                     </div>
                 </div>
