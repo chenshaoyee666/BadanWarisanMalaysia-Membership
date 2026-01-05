@@ -82,19 +82,29 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
       <header className="bg-[#0A402F] px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src={bwmLogo} alt="BWM Logo" className="w-10 h-10 rounded-xl" />
+          <span className="absolute left-1/2 transform -translate-x-1/2 text-white text-xl font-semibold">
+            WarisanXpress
+          </span>
         </div>
         <button className="text-white">
           <Bell size={24} />
         </button>
       </header>
 
+
       {/* Main Content */}
       <main className="flex-1 px-4 pb-24 overflow-y-auto">
         {/* Welcome Text */}
         <div className="mt-6 mb-6">
-          <h1 className="text-[#333333] font-['Lora']">Hi {userName}!</h1>
-          <p className="text-[#333333] opacity-70 mt-1">Welcome back to your heritage journey</p>
-        </div>
+          <h1 style={{ fontSize: '30px', fontFamily: 'Lora', color: '#333333' }}
+          >
+            Hi {userName} !
+          </h1>
+          <p style={{ fontSize: '18px', fontFamily: 'Pacifico, cursive', color: '#333333', opacity: 0.8, marginTop: '8px' }}
+            >
+            Welcome back to your heritage journey
+            </p>
+          </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-6">
