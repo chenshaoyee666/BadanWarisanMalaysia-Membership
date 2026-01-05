@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { fetchUserRegisteredEvents } from '../services/eventService';
 import { Event } from '../types/event';
+import { LayoutDashboard } from 'lucide-react';
 
 interface ProfileScreenProps {
   onNavigate: (screen: string) => void;
@@ -15,6 +16,7 @@ const menuItems = [
   { id: 'tickets', icon: Ticket, label: 'My Tickets', screen: 'my-tickets' },
   { id: 'donations', icon: History, label: 'Donation History', screen: 'donation-history' },
   { id: 'membership', icon: CreditCard, label: 'My Membership Card', screen: 'membership' },
+  { id: 'admin', icon: LayoutDashboard, label: 'Admin Portal', screen: 'admin-verification' },
   { id: 'edit-profile', icon: UserIcon, label: 'Edit Profile', screen: 'edit-profile' },
   { id: 'settings', icon: Settings, label: 'Settings', screen: 'settings' },
 ];

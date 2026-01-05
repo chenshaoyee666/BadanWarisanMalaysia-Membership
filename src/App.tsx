@@ -29,6 +29,9 @@ import { GrabPayPaymentPage } from './components/GrabPayPaymentPage';
 import { useAuth } from './contexts/AuthContext';
 import { Event } from './types/event'
 import { donationService } from './services/donationService';
+import AdminPage from './components/AdminPage';
+import { AdminVerificationScreen } from './components/AdminVerificationScreen';
+
 
 type Screen =
   | 'login'
@@ -51,13 +54,16 @@ type Screen =
   | 'my-events'
   | 'my-tickets'
   | 'settings'
+  | 'admin'
+  | 'admin-verification'
   | 'community-wall'
   | 'admin-scanner'
   | 'membership-renewal-payment'
   | 'donation-details'
   | 'payment-fpx'
   | 'payment-card'
-  | 'payment-grabpay';
+  | 'payment-grabpay'
+  | 'admin-page';
 
 export default function App() {
   const { user, loading, isConfigured, isAddressComplete } = useAuth();
@@ -169,6 +175,14 @@ export default function App() {
         />
       )}
 
+      {currentScreen === 'admin-verification' && (
+        <AdminVerificationScreen onNavigate={handleNavigateSimple} />
+      )}
+
+      {currentScreen === 'admin' && (
+        <AdminPage onNavigate={handleNavigateSimple} />
+      )}
+
       {currentScreen === 'signup' && (
         <SignUpScreen onNavigate={handleNavigate} />
       )}
@@ -269,8 +283,8 @@ export default function App() {
         <AdminScannerScreen onNavigate={handleNavigateSimple} />
       )}
 
-      {currentScreen === 'admin-scanner' && (
-        <AdminScannerScreen onNavigate={handleNavigateSimple} />
+      {currentScreen === 'admin-page' && (
+        <AdminPage onNavigate={handleNavigateSimple} />
       )}
 
       {currentScreen === 'membership-renewal-payment' && (
