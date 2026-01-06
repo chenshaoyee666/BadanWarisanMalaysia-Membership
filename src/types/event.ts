@@ -11,7 +11,7 @@ export interface Event {
   lng?: number;
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   fee?: string;
-  member_free?: boolean;
+  member_fee?: string;
   created_at?: string;
   updated_at?: string;
 }

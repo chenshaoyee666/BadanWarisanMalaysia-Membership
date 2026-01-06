@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  MapPin, 
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
   CheckCircle2,
   Loader2,
   User,
@@ -24,7 +24,7 @@ interface EventRegistrationProps {
 
 export function EventRegistration({ onNavigate, event }: EventRegistrationProps) {
   const { user } = useAuth();
-  
+
   // Form state
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: user?.user_metadata?.full_name || '',
@@ -32,54 +32,54 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
     phone: user?.user_metadata?.phone_number || '',
   });
   const [formErrors, setFormErrors] = useState<Partial<RegistrationFormData>>({});
-  
+
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Calculate price
-  const isFreeForUser = event.fee === 'Free' || (event.member_free && user);
-  const displayPrice = isFreeForUser ? 'Free' : event.fee;
+  const displayPrice = event.fee;
+  const displayMemberFee = event.member_fee;
 
   const validateForm = (): boolean => {
     const errors: Partial<RegistrationFormData> = {};
-    
+
     if (!formData.name.trim()) {
       errors.name = 'Name is required';
     }
-    
+
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Please enter a valid email';
     }
-    
+
     if (!formData.phone.trim()) {
       errors.phone = 'Phone number is required';
     } else if (!/^[\d\s\-+()]{8,}$/.test(formData.phone.replace(/\s/g, ''))) {
       errors.phone = 'Please enter a valid phone number';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     setSubmitError(null);
-    
+
     const { error } = await registerForEvent(
       event.id,
       formData,
       user?.id,
       !!user
     );
-    
+
     setIsSubmitting(false);
-    
+
     if (error) {
       setSubmitError(error.message || 'Registration failed. Please try again.');
     } else {
@@ -91,7 +91,7 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center gap-4">
-        <button 
+        <button
           onClick={() => onNavigate('event-details')}
           className="text-white"
         >
@@ -105,7 +105,7 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
         {/* Event Info Card */}
         <div className="bg-white rounded-2xl px-6 py-6 mb-6 shadow-sm">
           <h3 className="text-[#333] font-['Lora'] text-4xl mb-6" style={{ fontWeight: 700 }}>{event.title}</h3>
-          
+
           {/* Date */}
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-[#0A402F]/10 rounded-xl flex items-center justify-center">
@@ -113,7 +113,7 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
             </div>
             <span className="text-[#333] font-['Inter']">{event.date}{event.time && ` @ ${event.time}`}</span>
           </div>
-          
+
           {/* Location */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-[#0A402F]/10 rounded-xl flex items-center justify-center">
@@ -126,7 +126,7 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
         {/* Form */}
         <div className="bg-white rounded-2xl px-6 py-6 shadow-sm mb-6">
           <h4 className="text-[#333] font-['Lora'] text-xl mb-6" style={{ fontWeight: 700 }}>Your Details</h4>
-          
+
           <div className="space-y-6">
             {/* Name Field */}
             <div>
@@ -215,31 +215,31 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center">
-          <button 
+          <button
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('donate')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('events')}
             className="flex flex-col items-center gap-1 text-[#0A402F]"
           >
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('profile')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
@@ -251,11 +251,11 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
 
       {/* Success Modal */}
       {showSuccess && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6"
           onClick={() => setShowSuccess(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-xl w-[260px] p-4 text-center shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -266,10 +266,10 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
 
             {/* Title */}
             <h3 className="text-[#333333] font-['Lora'] text-lg mb-1">Registration Confirmed!</h3>
-            
+
             {/* Event Name */}
             <p className="text-[#0A402F] font-medium font-['Inter'] text-sm mb-0.5">{event.title}</p>
-            
+
             {/* Date & Time */}
             <p className="text-[#B48F5E] text-xs font-['Inter'] mb-3">
               {event.date}{event.time && ` at ${event.time}`}
@@ -285,6 +285,13 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
               <div className="bg-[#FFFBEA] rounded-lg py-2 px-3 mb-4">
                 <p className="text-gray-400 text-xs font-['Inter']">Amount</p>
                 <p className="text-[#0A402F] font-bold text-lg font-['Inter']">{displayPrice}</p>
+              </div>
+            )}
+            {/* Amount to Pay (member) */}
+            {displayMemberFee !== 'Free' && (
+              <div className="bg-[#FFFBEA] rounded-lg py-2 px-3 mb-4">
+                <p className="text-gray-400 text-xs font-['Inter']">Amount</p>
+                <p className="text-[#0A402F] font-bold text-lg font-['Inter']">{displayMemberFee}</p>
               </div>
             )}
 
@@ -312,7 +319,7 @@ export function EventRegistration({ onNavigate, event }: EventRegistrationProps)
                 Browse More Events
               </button>
             </div>
-            
+
             <button
               type="button"
               onClick={() => {

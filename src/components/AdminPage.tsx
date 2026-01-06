@@ -31,6 +31,7 @@ interface Event {
     location: string;
     image_url?: string;
     fee?: string;
+    member_fee?: string;
     time: string;
 }
 
@@ -53,6 +54,7 @@ const AdminPage = ({ onNavigate }: AdminPageProps) => {
         location: '',
         description: '',
         fee: '',
+        member_fee: '',
         time: '',
     });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -149,6 +151,7 @@ const AdminPage = ({ onNavigate }: AdminPageProps) => {
             const { error: dbError } = await supabase.from('admin_event_post').insert([{
                 event_title: newEvent.event_title,
                 fee: newEvent.fee,
+                member_fee: newEvent.member_fee,
                 description: newEvent.description,
                 date: newEvent.date,
                 time: newEvent.time,
@@ -243,6 +246,14 @@ const AdminPage = ({ onNavigate }: AdminPageProps) => {
                                         </div>
                                     </div>
                                 )}
+                                {event.member_fee !== undefined && (
+                                    <div className="mb-4 bg-[#FFFBEA] px-4 py-3 rounded-xl border border-[#0A402F]/5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-semibold text-[#0A402F] uppercase tracking-wide">Member Fee</ span>
+                                            <span className="text-base font-bold text-[#0A402F]">RM {parseFloat(event.member_fee || '0').toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="text-sm text-gray-500 mb-2">Notes: </div>
                                 <p className="text-sm text-gray-600 line-clamp-2 mb-4 leading-relaxed font-['Inter']">{event.description}</p>
                                 <div className="flex items-center justify-between pt-3 border-t border-gray-50">
@@ -333,6 +344,15 @@ const AdminPage = ({ onNavigate }: AdminPageProps) => {
                         <div className="relative">
                             <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><DollarSign size={18} /></div>
                             <input required type="number" step="0.01" placeholder="0.00" className="w-full pl-10 pr-4 py-5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A402F]/20 focus:border-[#0A402F] transition-all text-[#333333] font-medium text-lg text-center" value={newEvent.fee} onChange={e => setNewEvent({ ...newEvent, fee: e.target.value })} />
+                        </div>
+                    </div>
+
+                    <br />
+                    <div>
+                        <label className="block text-center text-xl font-bold text-[#0A402F] uppercase mb-2 tracking-widest pl-1">Member Fee (RM)</label>
+                        <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><DollarSign size={18} /></div>
+                            <input required type="number" step="0.01" placeholder="0.00" className="w-full pl-10 pr-4 py-5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A402F]/20 focus:border-[#0A402F] transition-all text-[#333333] font-medium text-lg text-center" value={newEvent.member_fee} onChange={e => setNewEvent({ ...newEvent, member_fee: e.target.value })} />
                         </div>
                     </div>
 

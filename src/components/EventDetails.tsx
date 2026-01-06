@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { 
-  ArrowLeft, 
-  Calendar, 
+import {
+  ArrowLeft,
+  Calendar,
   MapPin,
   Home,
   DollarSign,
@@ -20,7 +20,7 @@ interface EventDetailsProps {
 export function EventDetails({ onNavigate, event }: EventDetailsProps) {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   // Scroll to top when component mounts
   useEffect(() => {
     if (scrollRef.current) {
@@ -33,8 +33,9 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
   const descriptionParagraphs = event.description.split('\n').filter(p => p.trim());
 
   // Calculate if event is free for this user
-  const isFreeForUser = event.fee === 'Free' || (event.member_free && user);
+  const isFreeForUser = event.fee === 'Free' || (event.member_fee === 'Free' && user);
   const displayPrice = isFreeForUser ? 'Free' : event.fee;
+  const displayMemberFee = isFreeForUser ? 'Free' : event.member_fee;
 
   // Generate Google Maps embed URL
   const getMapEmbedUrl = () => {
@@ -48,8 +49,8 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
     <div ref={scrollRef} className="min-h-screen bg-[#FFFBEA] flex flex-col">
       {/* Header */}
       <header className="bg-[#0A402F] px-4 py-4 flex items-center gap-4">
-        <button 
-          onClick={() => onNavigate('events')} 
+        <button
+          onClick={() => onNavigate('events')}
           className="text-white"
         >
           <ArrowLeft size={24} />
@@ -59,7 +60,7 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
 
       {/* Hero Image */}
       <div className="relative">
-        <ImageWithFallback 
+        <ImageWithFallback
           src={event.poster_url}
           alt={event.title}
           className="w-full h-64 object-cover"
@@ -70,12 +71,12 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
       <main className="flex-1 px-4 py-6 overflow-y-auto pb-24">
         {/* Event Title */}
         <h1 className="text-[#333333] font-['Lora'] text-xl mb-4">{event.title}</h1>
-        
+
         {/* Date and Time */}
         <div className="flex items-center gap-2 mb-3">
           <Calendar size={20} className="text-[#B48F5E]" />
           <span className="text-[#333333] font-['Inter']">
-            {event.date}{event.time && ` @ ${event.time}`}
+            {event.date}{event.time && `  @ ${event.time}`}
           </span>
         </div>
 
@@ -87,10 +88,12 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
 
         {/* Price */}
         <div className="flex items-center gap-2 mb-6">
-          <span className="text-[#0A402F] font-semibold font-['Inter']">{displayPrice}</span>
-          {event.member_free && event.fee !== 'Free' && (
-            <span className="text-[#B48F5E] text-sm font-['Inter']">• Free for members</span>
-          )}
+          <span className="text-[#0A402F] font-semibold font-['Inter']">Registration Fee: RM{displayPrice}</span>
+        </div>
+
+        {/* Member Price */}
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-[#0A402F] font-semibold font-['Inter']">Member Fee: RM{displayMemberFee}</span>
         </div>
 
         {/* Organizer */}
@@ -106,8 +109,8 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
         <div className="mb-6">
           <h3 className="text-[#333333] font-['Lora'] text-lg mb-3">About this event</h3>
           {descriptionParagraphs.map((paragraph, index) => (
-            <p 
-              key={index} 
+            <p
+              key={index}
               className="text-[#333333] opacity-70 leading-relaxed mb-3 last:mb-0 font-['Inter']"
             >
               {paragraph}
@@ -130,7 +133,7 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
                 src={getMapEmbedUrl()}
               />
             </div>
-            <a 
+            <a
               href={`https://maps.google.com/?q=${event.lat},${event.lng}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -142,42 +145,42 @@ export function EventDetails({ onNavigate, event }: EventDetailsProps) {
         )}
 
         {/* Register Button */}
-        <button 
+        <button
           onClick={() => onNavigate('event-registration')}
           className="w-full bg-[#0A402F] hover:bg-[#083525] text-white h-12 rounded-xl font-['Inter'] font-medium text-base"
         >
-          Register Now {displayPrice !== 'Free' && `- ${displayPrice}`}
+          Register Now {displayPrice !== 'Free' && `- RM ${displayPrice}`}
         </button>
       </main>
 
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center">
-          <button 
+          <button
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('donate')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('events')}
             className="flex flex-col items-center gap-1 text-[#0A402F]"
           >
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('profile')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >

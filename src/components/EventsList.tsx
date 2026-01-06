@@ -23,16 +23,16 @@ export function EventsList({ onNavigate, onSelectEvent }: EventsListProps) {
   const loadEvents = async () => {
     setLoading(true);
     setError(null);
-    
+
     const { data, error } = await fetchEvents();
-    
+
     if (error) {
       setError('Failed to load events. Please try again.');
       console.error(error);
     } else if (data) {
       setEvents(data);
     }
-    
+
     setLoading(false);
   };
 
@@ -64,7 +64,7 @@ export function EventsList({ onNavigate, onSelectEvent }: EventsListProps) {
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-12">
             <p className="text-[#d4183d] mb-4 font-['Inter']">{error}</p>
-            <Button 
+            <Button
               onClick={loadEvents}
               className="bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FFFBEA] rounded-xl font-['Inter']"
             >
@@ -79,41 +79,46 @@ export function EventsList({ onNavigate, onSelectEvent }: EventsListProps) {
         ) : (
           <div className="space-y-4">
             {events.map((event) => (
-              <div 
-                key={event.id} 
+              <div
+                key={event.id}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
                 onClick={() => handleEventClick(event)}
               >
-                <ImageWithFallback 
+                <ImageWithFallback
                   src={event.poster_url}
                   alt={event.title}
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-4">
-                  <h3 className="text-[#333333] font-['Lora'] mb-2">{event.title}</h3>
-                  
+                  <h1 className="text-[#333333] font-['Lora'] mb-2 text-2xl">{event.title}</h1>
+
                   <div className="flex items-center text-[#333333] opacity-70 mb-2 font-['Inter']">
                     <Calendar size={16} className="mr-2 text-[#B48F5E]" />
                     <span>{event.date}{event.time && ` @ ${event.time}`}</span>
                   </div>
-                  
+
                   <div className="flex items-center text-[#333333] opacity-70 mb-3 font-['Inter']">
                     <MapPin size={16} className="mr-2 text-[#B48F5E]" />
                     <span>{event.location}</span>
                   </div>
-                  
+                  <div>
+                    Events Details:
+                  </div>
                   <p className="text-[#333333] opacity-70 mb-4 font-['Inter'] line-clamp-2">
                     {event.description.split('\n')[0]}
                   </p>
-                  
+                  <br />
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[#0A402F] font-medium font-['Inter']">{event.fee || 'Free'}</span>
-                      {event.member_free && event.fee !== 'Free' && (
-                        <span className="text-[#B48F5E] ml-2 text-sm font-['Inter']">Free for members</span>
-                      )}
+                      <span className="text-[#0A402F] font-medium font-['Inter']"> Registration Fee: RM {event.fee || 'Free'}</span>
                     </div>
-                    <Button 
+                  </div>
+                  <br />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[#0A402F] font-medium font-['Inter']"> Member Fee: RM {event.member_fee || 'Free'}</span>
+                    </div>
+                    <Button
                       className="bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FFFBEA] rounded-xl font-['Inter']"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -133,31 +138,31 @@ export function EventsList({ onNavigate, onSelectEvent }: EventsListProps) {
       {/* TOP-LEVEL: Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center">
-          <button 
+          <button
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('donate')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('events')}
             className="flex flex-col items-center gap-1 text-[#0A402F]"
           >
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('profile')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
