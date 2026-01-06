@@ -152,7 +152,7 @@ export function AIAssistant({ onNavigate }: AIAssistantProps) {
             </main>
 
             {/* Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 z-10">
+            <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
                 <div className="flex justify-between items-center max-w-md mx-auto">
                     <button
                         onClick={() => onNavigate("home")}
