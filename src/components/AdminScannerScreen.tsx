@@ -1,22 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, QrCode, Search, CheckCircle, XCircle, Camera } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Camera, Calendar, MapPin, User, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { fetchRegistrationById, markRegistrationAttended } from '../services/eventService';
 
 interface AdminScannerScreenProps {
     onNavigate: (screen: string) => void;
 }
 
+type ResultType = 'membership' | 'event_registration' | null;
+
 export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
     const [inputVal, setInputVal] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<any>(null);
+    const [resultType, setResultType] = useState<ResultType>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
+    const [markingAttendance, setMarkingAttendance] = useState(false);
 
     // Store the cleanup function or instance to handle StrictMode double-invokes
     const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -39,7 +44,8 @@ export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
                             { facingMode: "environment" },
                             {
                                 fps: 30, // Max speed
-                                qrbox: { width: 200, height: 200 }, // Focused scan area
+                                qrbox: { width: 280, height: 280 }, // Larger scan area for easier detection
+                                aspectRatio: 1.0, // Square aspect ratio
                                 disableFlip: true, // Skip mirror processing
                             },
                             (decodedText) => {
@@ -89,38 +95,51 @@ export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
 
         setLoading(true);
         setResult(null);
+        setResultType(null);
         setErrorMsg(null);
 
         try {
             // 1. Parse Input: It might be a JSON string (from QR) or just an ID
+            let parsed: any = null;
             let idToSearch = valToUse.trim();
-            // let type = 'unknown'; // Unused variable removed
 
             if (valToUse.startsWith('{')) {
                 try {
-                    const parsed = JSON.parse(valToUse);
-                    idToSearch = parsed.id;
-                    // type = parsed.type;
+                    parsed = JSON.parse(valToUse);
+                    idToSearch = parsed.registration_id || parsed.id;
                 } catch (e) {
                     console.error("Not a JSON string, treating as ID");
                 }
             }
 
-            // 2. Query DB
-            // We check 'memberships' table first. If not found, could check 'tickets' (future)
-            const { data, error } = await supabase
-                .from('memberships')
-                .select('*')
-                .eq('id', idToSearch)
-                .single();
+            // 2. Determine type and query appropriate table
+            if (parsed?.type === 'event_registration') {
+                // Event Registration QR Code
+                const { data, error } = await fetchRegistrationById(parsed.registration_id);
 
-            if (error || !data) {
-                setErrorMsg('Invalid Membership or ID not found.');
-            } else {
-                if (data.status !== 'active') {
-                    setErrorMsg(`Membership Found but status is ${data.status.toUpperCase()}`);
+                if (error || !data) {
+                    setErrorMsg('Event registration not found.');
                 } else {
                     setResult(data);
+                    setResultType('event_registration');
+                }
+            } else {
+                // Default to membership check
+                const { data, error } = await supabase
+                    .from('memberships')
+                    .select('*')
+                    .eq('id', idToSearch)
+                    .single();
+
+                if (error || !data) {
+                    setErrorMsg('Invalid Membership or ID not found.');
+                } else {
+                    if (data.status !== 'active') {
+                        setErrorMsg(`Membership Found but status is ${data.status.toUpperCase()}`);
+                    } else {
+                        setResult(data);
+                        setResultType('membership');
+                    }
                 }
             }
 
@@ -130,6 +149,34 @@ export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleMarkAttended = async () => {
+        if (!result?.id) return;
+
+        setMarkingAttendance(true);
+        try {
+            const { success, error } = await markRegistrationAttended(result.id);
+
+            if (success) {
+                toast.success('Attendance marked successfully!');
+                // Update local state to show attended
+                setResult({ ...result, status: 'attended' });
+            } else {
+                toast.error(error?.message || 'Failed to mark attendance');
+            }
+        } catch (err: any) {
+            toast.error(err.message || 'Error marking attendance');
+        } finally {
+            setMarkingAttendance(false);
+        }
+    };
+
+    const resetScanner = () => {
+        setInputVal('');
+        setResult(null);
+        setResultType(null);
+        setErrorMsg(null);
     };
 
     return (
@@ -207,10 +254,18 @@ export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
                         <XCircle size={48} className="text-red-500 mb-3" />
                         <h3 className="font-bold text-red-700 text-lg">Access Denied</h3>
                         <p className="text-red-600 text-center">{errorMsg}</p>
+                        <Button
+                            onClick={resetScanner}
+                            variant="outline"
+                            className="mt-4"
+                        >
+                            Scan Another
+                        </Button>
                     </div>
                 )}
 
-                {result && (
+                {/* Membership Result */}
+                {result && resultType === 'membership' && (
                     <div className="bg-[#F0FDF4] border border-green-200 rounded-xl p-6 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2">
                         <CheckCircle size={48} className="text-green-500 mb-3" />
                         <h3 className="font-bold text-green-700 text-2xl mb-1">Access Granted</h3>
@@ -236,6 +291,103 @@ export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
                                 <span className="font-bold text-green-600 uppercase tracking-wider">{result.status}</span>
                             </div>
                         </div>
+                        <Button
+                            onClick={resetScanner}
+                            variant="outline"
+                            className="mt-4"
+                        >
+                            Scan Another
+                        </Button>
+                    </div>
+                )}
+
+                {/* Event Registration Result */}
+                {result && resultType === 'event_registration' && (
+                    <div className={`border rounded-xl p-6 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 ${result.status === 'attended'
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-[#F0FDF4] border-green-200'
+                        }`}>
+                        <CheckCircle size={48} className={`mb-3 ${result.status === 'attended' ? 'text-blue-500' : 'text-green-500'
+                            }`} />
+                        <h3 className={`font-bold text-2xl mb-1 ${result.status === 'attended' ? 'text-blue-700' : 'text-green-700'
+                            }`}>
+                            {result.status === 'attended' ? 'Already Checked In' : 'Valid Ticket'}
+                        </h3>
+                        <p className={`font-medium mb-4 ${result.status === 'attended' ? 'text-blue-600' : 'text-green-600'
+                            }`}>
+                            Event Registration
+                        </p>
+
+                        <div className="w-full bg-white/50 rounded-lg p-4 space-y-3 text-sm">
+                            {/* Event Title */}
+                            <div className="pb-2 border-b border-gray-200">
+                                <span className="text-xs text-gray-400 uppercase tracking-wider">Event</span>
+                                <p className="font-bold text-gray-800 text-lg">{result.event_title}</p>
+                            </div>
+
+                            {/* Event Details */}
+                            <div className="flex items-center gap-2">
+                                <Calendar size={14} className="text-[#0A402F]" />
+                                <span className="text-gray-700">{result.event_date}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <MapPin size={14} className="text-[#0A402F]" />
+                                <span className="text-gray-700">{result.event_location}</span>
+                            </div>
+
+                            {/* Attendee Info */}
+                            <div className="pt-2 border-t border-gray-200">
+                                <span className="text-xs text-gray-400 uppercase tracking-wider">Attendee</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <User size={14} className="text-[#0A402F]" />
+                                    <span className="font-medium text-gray-800">{result.registrant_name}</span>
+                                </div>
+                                <p className="text-gray-500 text-xs mt-1">{result.registrant_email}</p>
+                            </div>
+
+                            {/* Ticket ID */}
+                            <div className="flex justify-between pt-2 border-t border-gray-200">
+                                <span className="text-gray-500">Ticket ID:</span>
+                                <span className="font-mono text-gray-800">{result.id.slice(0, 8).toUpperCase()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Status:</span>
+                                <span className={`font-bold uppercase tracking-wider ${result.status === 'attended' ? 'text-blue-600' : 'text-green-600'
+                                    }`}>
+                                    {result.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="w-full space-y-3 mt-4">
+                            {result.status !== 'attended' && (
+                                <Button
+                                    onClick={handleMarkAttended}
+                                    disabled={markingAttendance}
+                                    className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-white h-12 text-lg rounded-xl"
+                                >
+                                    {markingAttendance ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                            Marking Attendance...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle className="w-5 h-5 mr-2" />
+                                            Mark as Attended
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                            <Button
+                                onClick={resetScanner}
+                                variant="outline"
+                                className="w-full"
+                            >
+                                Scan Another
+                            </Button>
+                        </div>
                     </div>
                 )}
 
@@ -243,3 +395,4 @@ export function AdminScannerScreen({ onNavigate }: AdminScannerScreenProps) {
         </div>
     );
 }
+

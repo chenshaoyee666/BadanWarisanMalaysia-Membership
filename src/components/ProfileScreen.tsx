@@ -21,7 +21,7 @@ const menuItems = [
 
 export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps) {
   const { user, signOut } = useAuth();
-  const [registeredEvents, setRegisteredEvents] = useState<Event[]>([]);
+  const [registeredEvents, setRegisteredEvents] = useState<Partial<Event>[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
   // Refresh user data when component mounts or when navigating back

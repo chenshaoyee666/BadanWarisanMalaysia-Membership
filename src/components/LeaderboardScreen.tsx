@@ -1,24 +1,14 @@
 import { Trophy, Medal, Award, Bell, Home, DollarSign, Calendar, User } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { donationService } from '../services/donationService';
 import bwmLogo from '../assets/BWM logo.png';
 
 interface LeaderboardScreenProps {
   onNavigate: (screen: string) => void;
 }
 
-const topDonors = [
-  { rank: 1, name: 'Ahmad I.', amount: 'RM5,250' },
-  { rank: 2, name: 'Siti N.', amount: 'RM4,800' },
-  { rank: 3, name: 'Raj K.', amount: 'RM3,900' },
-  { rank: 4, name: 'Chen', amount: 'RM2,500' },
-  { rank: 5, name: 'Maria L.', amount: 'RM2,100' },
-  { rank: 6, name: 'Hassan M.', amount: 'RM1,850' },
-  { rank: 7, name: 'Priya S.', amount: 'RM1,600' },
-  { rank: 8, name: 'Wong T.', amount: 'RM1,400' },
-  { rank: 9, name: 'Aisha B.', amount: 'RM1,200' },
-  { rank: 10, name: 'David C.', amount: 'RM1,050' },
-];
+
 
 const topVolunteers = [
   { rank: 1, name: 'Siti N.', hours: '45 hours' },
@@ -65,6 +55,32 @@ const getRankBgColor = (rank: number) => {
 
 export function LeaderboardScreen({ onNavigate }: LeaderboardScreenProps) {
   const [activeTab, setActiveTab] = useState('donors');
+  const [donors, setDonors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Import dynamically to avoid circular dependencies if any, or just standard import
+    // Ideally import at top, but for replace block efficiency:
+    const fetchLeaderboard = async () => {
+      try {
+        const data = await donationService.getLeaderboard();
+
+        // Format for display
+        const formattedData = data.map(entry => ({
+          ...entry,
+          amount: new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(entry.amount)
+        }));
+
+        setDonors(formattedData);
+      } catch (err) {
+        console.error('Failed to load leaderboard', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FFFBEA] flex flex-col">
@@ -83,14 +99,14 @@ export function LeaderboardScreen({ onNavigate }: LeaderboardScreenProps) {
       <main className="flex-1 px-4 py-6 overflow-y-auto pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 bg-white rounded-xl">
-            <TabsTrigger 
-              value="donors" 
+            <TabsTrigger
+              value="donors"
               className="data-[state=active]:bg-[#0A402F] data-[state=active]:text-[#FFFBEA] rounded-xl font-['Inter']"
             >
               Top Donors
             </TabsTrigger>
-            <TabsTrigger 
-              value="volunteers" 
+            <TabsTrigger
+              value="volunteers"
               className="data-[state=active]:bg-[#0A402F] data-[state=active]:text-[#FFFBEA] rounded-xl font-['Inter']"
             >
               Top Volunteers
@@ -98,25 +114,31 @@ export function LeaderboardScreen({ onNavigate }: LeaderboardScreenProps) {
           </TabsList>
 
           <TabsContent value="donors" className="space-y-3">
-            {topDonors.map((donor) => (
-              <div
-                key={donor.rank}
-                className={`rounded-xl p-4 flex items-center justify-between ${getRankBgColor(donor.rank)} shadow-sm`}
-              >
-                <div className="flex items-center gap-4">
-                  {getRankIcon(donor.rank)}
-                  <div>
-                    <p className="text-[#333333] font-['Inter']">{donor.name}</p>
-                    {donor.rank <= 3 && (
-                      <p className="text-[#B48F5E] font-['Inter']">
-                        {donor.rank === 1 ? '🏆 Gold Champion' : donor.rank === 2 ? '🥈 Silver Supporter' : '🥉 Bronze Patron'}
-                      </p>
-                    )}
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading leaderboard...</div>
+            ) : donors.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No donations yet. Be the first!</div>
+            ) : (
+              donors.map((donor) => (
+                <div
+                  key={donor.rank}
+                  className={`rounded-xl p-4 flex items-center justify-between ${getRankBgColor(donor.rank)} shadow-sm`}
+                >
+                  <div className="flex items-center gap-4">
+                    {getRankIcon(donor.rank)}
+                    <div>
+                      <p className="text-[#333333] font-['Inter']">{donor.name}</p>
+                      {donor.rank <= 3 && (
+                        <p className="text-[#B48F5E] font-['Inter']">
+                          {donor.rank === 1 ? '🏆 Gold Champion' : donor.rank === 2 ? '🥈 Silver Supporter' : '🥉 Bronze Patron'}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <p className="text-[#0A402F] font-['Inter']">{donor.amount}</p>
                 </div>
-                <p className="text-[#0A402F] font-['Inter']">{donor.amount}</p>
-              </div>
-            ))}
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="volunteers" className="space-y-3">
@@ -153,31 +175,31 @@ export function LeaderboardScreen({ onNavigate }: LeaderboardScreenProps) {
       {/* TOP-LEVEL: Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-3">
         <div className="flex justify-between items-center max-w-md mx-auto">
-          <button 
+          <button
             onClick={() => onNavigate('home')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Home size={24} />
             <span className="text-xs font-['Inter']">Home</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('donate')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <DollarSign size={24} />
             <span className="text-xs font-['Inter']">Donate</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('events')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >
             <Calendar size={24} />
             <span className="text-xs font-['Inter']">Events</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onNavigate('profile')}
             className="flex flex-col items-center gap-1 text-gray-400"
           >

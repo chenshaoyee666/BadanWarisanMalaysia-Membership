@@ -22,8 +22,16 @@ import { SignUpScreen } from './components/SignUpScreen';
 import { AddressCompletionScreen } from './components/AddressCompletionScreen';
 import { MyTicketsScreen } from './components/MyTicketsScreen';
 import { AdminScannerScreen } from './components/AdminScannerScreen';
+import { EventPaymentSelection } from './components/EventPaymentSelection';
+import { EventPaymentSuccess } from './components/EventPaymentSuccess';
+import { DonationDetailsScreen } from './components/DonationDetailsScreen';
+import { FPXPaymentPage } from './components/FPXPaymentPage';
+import { CardPaymentPage } from './components/CardPaymentPage';
+import { GrabPayPaymentPage } from './components/GrabPayPaymentPage';
 import { useAuth } from './contexts/AuthContext';
-import { Event } from './types/event'
+import { Event, RegistrationFormData } from './types/event'
+import { donationService } from './services/donationService';
+import { dummyEvents } from './services/eventService';
 
 type Screen =
   | 'login'
@@ -48,7 +56,14 @@ type Screen =
   | 'settings'
   | 'community-wall'
   | 'admin-scanner'
-  | 'membership-renewal-payment';
+  | 'membership-renewal-payment'
+  | 'donation-details'
+  | 'payment-fpx'
+  | 'payment-card'
+  | 'payment-card'
+  | 'payment-grabpay'
+  | 'event-payment-selection'
+  | 'event-payment-success';
 
 export default function App() {
   const { user, loading, isConfigured, isAddressComplete } = useAuth();
@@ -56,6 +71,15 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [justLoggedIn, setJustLoggedIn] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('general');
+  const [donationAmount, setDonationAmount] = useState<number>(50);
+
+  // Event payment state
+  const [eventPaymentData, setEventPaymentData] = useState<{
+    amount: number;
+    eventId: string;
+    formData: RegistrationFormData | null;
+  }>({ amount: 0, eventId: '', formData: null });
 
   useEffect(() => {
     // Redirect based on authentication state (only if Supabase is configured)
@@ -112,9 +136,64 @@ export default function App() {
     handleNavigate(screen);
   };
 
+  const handleDonateNavigate = (screen: string, params?: { campaignId: string }) => {
+    if (params?.campaignId) {
+      setSelectedCampaignId(params.campaignId);
+    }
+    handleNavigateSimple(screen);
+  };
+
   // Handler for selecting an event
   const handleSelectEvent = (event: Event) => {
     setSelectedEvent(event);
+  };
+
+  // Helper to record donation
+  const handlePaymentSuccess = async (method: 'fpx' | 'card' | 'grabpay') => {
+    try {
+      await donationService.addDonation(donationAmount, method, selectedCampaignId);
+      alert('Payment Successful! Thank you for your donation.');
+      handleNavigateSimple('home');
+    } catch (error) {
+      console.error('Donation record failed', error);
+      alert('Payment Successful, but failed to record in leaderboard. Please contact support.');
+      handleNavigateSimple('home');
+    }
+  };
+
+  // Handler for event payment - show selection screen first
+  const handleEventProceedToPayment = (amount: number, _method: string, eventId: string, formData: RegistrationFormData) => {
+    setEventPaymentData({ amount, eventId, formData });
+    handleNavigateSimple('event-payment-selection');
+  };
+
+  // Handler for confirmed payment method from selection screen
+  const handleEventPaymentMethodConfirmed = (method: string) => {
+    if (method === 'fpx') handleNavigateSimple('payment-fpx');
+    else if (method === 'card') handleNavigateSimple('payment-card');
+    else if (method === 'grabpay') handleNavigateSimple('payment-grabpay');
+  };
+
+  // Handler for event payment success
+  const handleEventPaymentSuccess = async (_method: 'fpx' | 'card' | 'grabpay') => {
+    if (!eventPaymentData.formData) {
+      alert('Payment error: No registration data');
+      return;
+    }
+    const { registerForEvent } = await import('./services/eventService');
+    const { error } = await registerForEvent(
+      eventPaymentData.eventId,
+      eventPaymentData.formData,
+      user?.id,
+      !!user
+    );
+    if (error) {
+      alert('Registration failed: ' + error.message);
+    } else {
+      alert('Payment successful! Registration complete.');
+      // Keep eventPaymentData for the success screen
+      handleNavigateSimple('event-payment-success');
+    }
   };
 
   // Show loading state while checking auth
@@ -186,7 +265,60 @@ export default function App() {
         <EventRegistration
           onNavigate={handleNavigateSimple}
           event={selectedEvent}
+          onProceedToPayment={handleEventProceedToPayment}
         />
+      )}
+
+      {currentScreen === 'event-payment-selection' && (
+        (() => {
+          // Fallback: if selectedEvent is missing (e.g. refresh), try to find it by ID
+          const eventToRender = selectedEvent || dummyEvents.find(e => e.id === eventPaymentData.eventId);
+
+          if (eventToRender && eventPaymentData.formData) {
+            return (
+              <EventPaymentSelection
+                onProceed={handleEventPaymentMethodConfirmed}
+                onBack={() => handleNavigateSimple('event-registration')}
+                event={eventToRender}
+                registrationData={eventPaymentData.formData}
+                amount={eventPaymentData.amount}
+              />
+            );
+          }
+
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-center">
+                <p className="text-red-500 mb-2">Error: Missing event or registration data.</p>
+                <button
+                  onClick={() => handleNavigateSimple('events')}
+                  className="text-[#0A402F] underline"
+                >
+                  Return to Events
+                </button>
+              </div>
+            </div>
+          );
+        })()
+      )}
+
+      {currentScreen === 'event-payment-success' && (
+        (() => {
+          const eventToRender = selectedEvent || dummyEvents.find(e => e.id === eventPaymentData.eventId);
+
+          if (eventToRender && eventPaymentData.formData) {
+            return (
+              <EventPaymentSuccess
+                onNavigate={handleNavigateSimple}
+                event={eventToRender}
+                registrationData={eventPaymentData.formData}
+                amount={eventPaymentData.amount}
+              />
+            );
+          }
+          // Fail safe
+          return null;
+        })()
       )}
 
       {currentScreen === 'leaderboard' && (
@@ -219,7 +351,7 @@ export default function App() {
 
       {/* Placeholder screens for donate and settings */}
       {currentScreen === 'donate' && (
-        <DonateScreen onNavigate={handleNavigateSimple} />
+        <DonateScreen onNavigate={handleDonateNavigate} />
       )}
 
       {currentScreen === 'edit-profile' && (
@@ -240,6 +372,44 @@ export default function App() {
 
       {currentScreen === 'membership-renewal-payment' && (
         <MembershipRenewalPayment onNavigate={handleNavigateSimple} />
+      )}
+
+      {/* Donation Flow Screens */}
+      {currentScreen === 'donation-details' && (
+        <DonationDetailsScreen
+          data={{ campaignId: selectedCampaignId }}
+          onProceed={(amount, method) => {
+            setDonationAmount(amount);
+            if (method === 'fpx') handleNavigateSimple('payment-fpx');
+            if (method === 'card') handleNavigateSimple('payment-card');
+            if (method === 'grabpay') handleNavigateSimple('payment-grabpay');
+          }}
+          onBack={() => handleNavigateSimple('donate')}
+        />
+      )}
+
+      {currentScreen === 'payment-fpx' && (
+        <FPXPaymentPage
+          amount={eventPaymentData.formData ? eventPaymentData.amount : donationAmount}
+          onBack={() => handleNavigateSimple(eventPaymentData.formData ? 'event-payment-selection' : 'donation-details')}
+          onSuccess={() => eventPaymentData.formData ? handleEventPaymentSuccess('fpx') : handlePaymentSuccess('fpx')}
+        />
+      )}
+
+      {currentScreen === 'payment-card' && (
+        <CardPaymentPage
+          amount={eventPaymentData.formData ? eventPaymentData.amount : donationAmount}
+          onBack={() => handleNavigateSimple(eventPaymentData.formData ? 'event-payment-selection' : 'donation-details')}
+          onSuccess={() => eventPaymentData.formData ? handleEventPaymentSuccess('card') : handlePaymentSuccess('card')}
+        />
+      )}
+
+      {currentScreen === 'payment-grabpay' && (
+        <GrabPayPaymentPage
+          amount={eventPaymentData.formData ? eventPaymentData.amount : donationAmount}
+          onBack={() => handleNavigateSimple(eventPaymentData.formData ? 'event-payment-selection' : 'donation-details')}
+          onSuccess={() => eventPaymentData.formData ? handleEventPaymentSuccess('grabpay') : handlePaymentSuccess('grabpay')}
+        />
       )}
     </div>
   );
