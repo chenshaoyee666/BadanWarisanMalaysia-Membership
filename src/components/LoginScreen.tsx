@@ -95,6 +95,15 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
       <main className="flex-1 px-6 py-8 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
 
+          {/* Quick Demo Access Button */}
+          <button
+            type="button"
+            onClick={() => onNavigate('home')}
+            className="mb-6 w-full h-12 rounded-lg bg-[#B48F5E] hover:bg-[#B48F5E]/90 text-white font-medium text-base transition-colors"
+          >
+            🎭 Continue as Guest (Demo Mode)
+          </button>
+
           {/* Welcome Section */}
           <div className="mb-6 text-center">
             <h2 className="text-[#333333] font-['Lora'] text-3xl font-semibold mb-2">
