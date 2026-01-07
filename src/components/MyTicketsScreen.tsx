@@ -1,9 +1,9 @@
 import { ArrowLeft, Ticket } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { TicketCard } from './TicketCard';
+import { RegistrationTicketCard, EventRegistrationData } from './RegistrationTicketCard';
 import { Button } from './ui/button';
+import { fetchUserRegistrationsWithDetails } from '../services/eventService';
 
 interface MyTicketsScreenProps {
     onNavigate: (screen: string) => void;
@@ -11,34 +11,22 @@ interface MyTicketsScreenProps {
 
 export function MyTicketsScreen({ onNavigate }: MyTicketsScreenProps) {
     const { user } = useAuth();
-    const [tickets, setTickets] = useState<any[]>([]);
+    const [registrations, setRegistrations] = useState<EventRegistrationData[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (user) {
-            fetchTickets();
+            fetchRegistrations();
         }
     }, [user]);
 
-    const fetchTickets = async () => {
+    const fetchRegistrations = async () => {
         try {
-            const { data, error } = await supabase
-                .from('tickets')
-                .select(`
-          *,
-          events (
-            title,
-            date,
-            location
-          )
-        `)
-                .eq('user_id', user?.id)
-                .order('created_at', { ascending: false });
-
+            const { data, error } = await fetchUserRegistrationsWithDetails(user?.id);
             if (error) throw error;
-            setTickets(data || []);
+            setRegistrations(data || []);
         } catch (error) {
-            console.error('Error fetching tickets:', error);
+            console.error('Error fetching registrations:', error);
         } finally {
             setLoading(false);
         }
@@ -60,10 +48,10 @@ export function MyTicketsScreen({ onNavigate }: MyTicketsScreenProps) {
                     <div className="flex justify-center items-center h-64">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A402F]"></div>
                     </div>
-                ) : tickets.length > 0 ? (
+                ) : registrations.length > 0 ? (
                     <div className="space-y-4">
-                        {tickets.map((ticket) => (
-                            <TicketCard key={ticket.id} ticket={ticket} />
+                        {registrations.map((registration) => (
+                            <RegistrationTicketCard key={registration.id} registration={registration} />
                         ))}
                     </div>
                 ) : (
@@ -73,7 +61,7 @@ export function MyTicketsScreen({ onNavigate }: MyTicketsScreenProps) {
                         </div>
                         <h3 className="text-lg font-medium text-gray-900 mb-1">No tickets yet</h3>
                         <p className="text-gray-500 mb-6 max-w-xs">
-                            You haven't purchased any event tickets yet. Explore upcoming events!
+                            Register for events to get your tickets here. Each ticket has a QR code for check-in!
                         </p>
                         <Button
                             onClick={() => onNavigate('events')}
@@ -87,3 +75,4 @@ export function MyTicketsScreen({ onNavigate }: MyTicketsScreenProps) {
         </div>
     );
 }
+

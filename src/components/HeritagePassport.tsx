@@ -1,57 +1,39 @@
-import { ArrowLeft, Lock, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Lock, Check, Loader2 } from 'lucide-react';
+import { fetchHeritageSitesWithVisits } from '../services/heritageService';
+import { HeritageSiteWithVisit } from '../types/heritage';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HeritagePassportProps {
   onNavigate: (screen: string) => void;
 }
 
-const heritageSites = [
-  {
-    id: 1,
-    name: 'Rumah Penghulu',
-    visited: true,
-    date: '25 Oct 2025',
-    color: '#B8860B',
-  },
-  {
-    id: 2,
-    name: 'Sultan Abdul Samad Building',
-    visited: false,
-    date: null,
-    color: '#0A402F',
-  },
-  {
-    id: 3,
-    name: 'St. Mary\'s Cathedral',
-    visited: false,
-    date: null,
-    color: '#0A402F',
-  },
-  {
-    id: 4,
-    name: 'Merdeka Square',
-    visited: false,
-    date: null,
-    color: '#0A402F',
-  },
-  {
-    id: 5,
-    name: 'Batu Caves Temple',
-    visited: false,
-    date: null,
-    color: '#0A402F',
-  },
-  {
-    id: 6,
-    name: 'A Famosa Fort',
-    visited: false,
-    date: null,
-    color: '#0A402F',
-  },
-];
-
 export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
-  const visitedCount = heritageSites.filter((site) => site.visited).length;
-  const progress = (visitedCount / heritageSites.length) * 100;
+  const { user } = useAuth();
+  const [sites, setSites] = useState<HeritageSiteWithVisit[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadSites();
+  }, [user]);
+
+  const loadSites = async () => {
+    setLoading(true);
+    const { data } = await fetchHeritageSitesWithVisits(user?.id);
+    if (data) {
+      setSites(data);
+    }
+    setLoading(false);
+  };
+
+  const visitedCount = sites.filter((site) => site.visited).length;
+  const progress = sites.length > 0 ? (visitedCount / sites.length) * 100 : 0;
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   return (
     <div className="min-h-screen bg-[#FEFDF5] flex flex-col">
@@ -76,7 +58,7 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
             <div className="flex justify-between items-center mb-2">
               <span className="text-[#333333]">Progress</span>
               <span className="text-[#0A402F]">
-                {visitedCount} of {heritageSites.length}
+                {visitedCount} of {sites.length}
               </span>
             </div>
             <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -87,7 +69,7 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
             </div>
           </div>
 
-          {visitedCount === heritageSites.length && (
+          {visitedCount === sites.length && sites.length > 0 && (
             <div className="mt-4 bg-[#B8860B]/10 border-2 border-[#B8860B] rounded-xl p-4">
               <p className="text-[#333333] text-center">
                 🎉 Complete all sites to unlock 10% off membership renewal!
@@ -96,80 +78,91 @@ export function HeritagePassport({ onNavigate }: HeritagePassportProps) {
           )}
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin text-[#0A402F]" size={32} />
+          </div>
+        )}
+
         {/* Heritage Sites Grid */}
-        <h4 className="text-[#333333] mb-4">Heritage Sites</h4>
-        <div className="grid grid-cols-2 gap-4">
-          {heritageSites.map((site) => (
-            <div
-              key={site.id}
-              className={`rounded-2xl p-6 relative overflow-hidden ${
-                site.visited ? 'bg-white shadow-lg' : 'bg-white opacity-60'
-              }`}
-              style={{
-                borderColor: site.visited ? site.color : '#E5E7EB',
-                borderWidth: site.visited ? '3px' : '1px',
-                borderStyle: 'solid',
-              }}
-            >
-              {/* Lock Icon for Unvisited */}
-              {!site.visited && (
-                <div className="absolute top-3 right-3">
-                  <Lock className="text-gray-400" size={20} />
-                </div>
-              )}
-
-              {/* Check Icon for Visited */}
-              {site.visited && (
-                <div
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: site.color }}
-                >
-                  <Check className="text-white" size={16} />
-                </div>
-              )}
-
-              {/* Site Icon/Illustration */}
-              <div className="mb-4 flex items-center justify-center">
-                <div
-                  className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                    site.visited ? 'opacity-100' : 'opacity-30'
-                  }`}
-                  style={{
-                    backgroundColor: site.visited ? `${site.color}20` : '#F3F4F6',
-                  }}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={site.visited ? site.color : '#9CA3AF'}
-                    strokeWidth="2"
-                    className="w-8 h-8"
+        {!loading && (
+          <>
+            <h4 className="text-[#333333] mb-4">Heritage Sites</h4>
+            <div className="grid grid-cols-2 gap-4">
+              {sites.map((site) => {
+                const color = site.visited ? '#B8860B' : '#0A402F';
+                return (
+                  <div
+                    key={site.id}
+                    className={`rounded-2xl p-6 relative overflow-hidden ${site.visited ? 'bg-white shadow-lg' : 'bg-white opacity-60'
+                      }`}
+                    style={{
+                      borderColor: site.visited ? color : '#E5E7EB',
+                      borderWidth: site.visited ? '3px' : '1px',
+                      borderStyle: 'solid',
+                    }}
                   >
-                    <path d="M3 21h18M5 21V7l8-4v18M13 9h6v12M13 13h6M13 17h6" />
-                  </svg>
-                </div>
-              </div>
+                    {/* Lock Icon for Unvisited */}
+                    {!site.visited && (
+                      <div className="absolute top-3 right-3">
+                        <Lock className="text-gray-400" size={20} />
+                      </div>
+                    )}
 
-              {/* Site Name */}
-              <p
-                className={`text-center mb-1 ${
-                  site.visited ? 'text-[#333333]' : 'text-gray-400'
-                }`}
-              >
-                {site.name}
-              </p>
+                    {/* Check Icon for Visited */}
+                    {site.visited && (
+                      <div
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: color }}
+                      >
+                        <Check className="text-white" size={16} />
+                      </div>
+                    )}
 
-              {/* Visit Date or Locked Status */}
-              {site.visited ? (
-                <p className="text-center text-[#B8860B]">
-                  Visited: {site.date}
-                </p>
-              ) : (
-                <p className="text-center text-gray-400">Locked</p>
-              )}
+                    {/* Site Icon/Illustration */}
+                    <div className="mb-4 flex items-center justify-center">
+                      <div
+                        className={`w-16 h-16 rounded-xl flex items-center justify-center ${site.visited ? 'opacity-100' : 'opacity-30'
+                          }`}
+                        style={{
+                          backgroundColor: site.visited ? `${color}20` : '#F3F4F6',
+                        }}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={site.visited ? color : '#9CA3AF'}
+                          strokeWidth="2"
+                          className="w-8 h-8"
+                        >
+                          <path d="M3 21h18M5 21V7l8-4v18M13 9h6v12M13 13h6M13 17h6" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Site Name */}
+                    <p
+                      className={`text-center mb-1 text-sm ${site.visited ? 'text-[#333333]' : 'text-gray-400'
+                        }`}
+                    >
+                      {site.name}
+                    </p>
+
+                    {/* Visit Date or Locked Status */}
+                    {site.visited ? (
+                      <p className="text-center text-[#B8860B] text-xs">
+                        Visited: {formatDate(site.visit_date)}
+                      </p>
+                    ) : (
+                      <p className="text-center text-gray-400 text-xs">Locked</p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
         {/* How It Works */}
         <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm">

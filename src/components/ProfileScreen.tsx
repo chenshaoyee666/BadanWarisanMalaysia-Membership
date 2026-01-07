@@ -41,7 +41,7 @@ export function ProfileScreen({ onNavigate, onSelectEvent }: ProfileScreenProps)
     refreshUser();
   }, [user]);
 
-  // Fetch user's registered events
+// Fetch user's registered events
   useEffect(() => {
     const loadRegisteredEvents = async () => {
       setLoadingEvents(true);
