@@ -94,31 +94,6 @@ export function LoginScreen({ onNavigate, onLogin, onLoginSuccess }: LoginScreen
       {/* Main Content */}
       <main className="flex-1 px-6 py-8 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
-          {/* Configuration Warning */}
-          {!isConfigured && (
-            <div className="mb-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-              <h3 className="text-yellow-800 font-semibold mb-2">⚠️ Supabase Not Configured</h3>
-              <p className="text-yellow-700 text-sm mb-3">
-                To enable authentication, please set up your Supabase credentials:
-              </p>
-              <ol className="text-yellow-700 text-sm list-decimal list-inside space-y-1">
-                <li>Create a <code className="bg-yellow-100 px-1 rounded">.env</code> file in the root directory</li>
-                <li>Add your Supabase URL and anon key</li>
-                <li>Restart the development server</li>
-              </ol>
-              <p className="text-yellow-700 text-xs mt-3">
-                See <code className="bg-yellow-100 px-1 rounded">SUPABASE_SETUP.md</code> for detailed instructions.
-              </p>
-              {/* Demo Mode Button */}
-              <button
-                type="button"
-                onClick={() => onNavigate('home')}
-                className="mt-4 w-full h-10 rounded-lg bg-[#B48F5E] hover:bg-[#B48F5E]/90 text-white font-medium text-sm transition-colors"
-              >
-                🎭 Continue as Guest (Demo Mode)
-              </button>
-            </div>
-          )}
 
           {/* Welcome Section */}
           <div className="mb-6 text-center">
