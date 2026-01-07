@@ -101,8 +101,8 @@ export const dummyEvents: Event[] = [
   },
 ];
 
-// Set to true to always use demo data (useful during development)
-const USE_DEMO_DATA = true;
+// Set to false to use real Supabase data when configured
+const USE_DEMO_DATA = false;
 
 /**
  * Fetch all upcoming events
