@@ -2,21 +2,41 @@ import { Bell, Heart, Calendar, Trophy, HelpCircle, Home, DollarSign, User, Menu
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import bwmLogo from '../assets/BWM logo.png';
 import { useAuth } from '../contexts/AuthContext';
+import { donationService } from '../services/donationService';
 
 interface HomeScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, params?: { campaignId: string }) => void;
   activeTab: string;
 }
 
 export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
   const { user } = useAuth();
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [stats, setStats] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await donationService.getCampaignStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to load campaign stats', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Get user's full name from metadata
   const userName = user?.user_metadata?.full_name || 'User';
+
+  // Rumah Penghulu Stats
+  const rumahPenghuluId = 'rumah-penghulu';
+  const rumahPenghuluGoal = 20000;
+  const rumahPenghuluRaised = stats[rumahPenghuluId] || 0;
+  const rumahPenghuluProgress = Math.min((rumahPenghuluRaised / rumahPenghuluGoal) * 100, 100);
 
   return (
     <div className="min-h-screen bg-[#FEFDF5] flex flex-col">
@@ -101,10 +121,10 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
             Hi {userName} !
           </h1>
           <p style={{ fontSize: '18px', fontFamily: 'Pacifico, cursive', color: '#333333', opacity: 0.8, marginTop: '8px' }}
-            >
+          >
             Welcome back to your heritage journey
-            </p>
-          </div>
+          </p>
+        </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -164,13 +184,13 @@ export function HomeScreen({ onNavigate, activeTab }: HomeScreenProps) {
 
             <div className="mb-2">
               <div className="flex justify-between mb-2">
-                <span className="text-[#333333]">RM15,000</span>
-                <span className="text-[#333333] opacity-70">RM20,000</span>
+                <span className="text-[#333333]">RM{rumahPenghuluRaised.toLocaleString()}</span>
+                <span className="text-[#333333] opacity-70">RM{rumahPenghuluGoal.toLocaleString()}</span>
               </div>
-              <Progress value={75} className="h-2 bg-[#FEFDF5]" indicatorClassName="bg-[#B8860B]" />
+              <Progress value={rumahPenghuluProgress} className="h-2 bg-[#FEFDF5]" indicatorClassName="bg-[#B8860B]" />
             </div>
 
-            <Button className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FEFDF5] mt-2 rounded-lg">
+            <Button onClick={() => onNavigate('donation-details', { campaignId: rumahPenghuluId })} className="w-full bg-[#0A402F] hover:bg-[#0A402F]/90 text-[#FEFDF5] mt-2 rounded-lg">
               Support Campaign
             </Button>
           </div>

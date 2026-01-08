@@ -232,7 +232,7 @@ export default function App() {
       )}
 
       {currentScreen === 'home' && (
-        <HomeScreen onNavigate={handleNavigateSimple} activeTab={activeTab} />
+        <HomeScreen onNavigate={handleDonateNavigate} activeTab={activeTab} />
       )}
 
       {currentScreen === 'membership' && (
